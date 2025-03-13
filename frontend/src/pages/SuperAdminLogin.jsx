@@ -7,7 +7,7 @@ function SuperAdminLogin() {
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  
+  const navigate = useNavigate(); // For redirecting
 
   const handleLogin = async () => {
     if (!user || !password) {
@@ -23,7 +23,7 @@ function SuperAdminLogin() {
 
       if (response.data.success) {
         localStorage.setItem("superadmin", response.data.user); // Store session manually
-        useNavigate("/dashboard"); // Redirect after login
+        navigate("/dashboard"); // Redirect after login
       } else {
         setError(response.data.message);
       }

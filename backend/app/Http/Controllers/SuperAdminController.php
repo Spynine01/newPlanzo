@@ -9,15 +9,22 @@ class SuperAdminController extends Controller
 {
     public function login(Request $request)
     {
-        $user = DB::table('super_admin')
+        $superAdmin = DB::table('super_admin')
             ->where('user', $request->user)
             ->where('password', $request->password)
             ->first();
 
-        if ($user) {
-            return response()->json(['message' => 'Login successful']);
-        } else {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            if ($superAdmin) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login Successful',
+                    'redirect' => '/dashboard' // Send redirect URL
+                ]);
+            }
+        
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials'
+            ]);
         }
-    }
 }
