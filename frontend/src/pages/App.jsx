@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+
+
 import axios from 'axios'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import SuperAdminLogin from './superAdminLogin';
+import SuperPage from './SuperPage';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -24,12 +26,15 @@ fetchData();
 }
 
 
-  return (
-    <>
-      <h1>Hello </h1>
-      <button onClick={sendData}> Send Data </button>
-    </>
-  )
+return (
+  <Router>
+    <Routes>
+      <Route path="" element={<SuperAdminLogin />} />
+      <Route path="/dashboard" element={<SuperPage />} />
+    </Routes>
+  </Router>
+);
 }
+
 
 export default App
