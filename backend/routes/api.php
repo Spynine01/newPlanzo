@@ -5,6 +5,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\EventOrganisorArppoveController;
+use App\Http\Controllers\EventOrganisorPendingController;
+use MongoDB\Client;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -37,3 +40,22 @@ Route::post('/eventorg', [EventOrganisorArppoveController::class, 'login']);
 
 
 Route::post('/register', [MainUserController::class, 'register']);
+
+
+Route::post('/eventOrgRegister', [EventOrganisorPendingController::class, 'store']);
+
+Route::get('/eventOrgFetch', [EventOrganisorPendingController::class, 'index']);
+
+// Route::get('/test-mongo', function () {
+//     try {
+//         $client = new Client();
+//         $db = $client->selectDatabase('planzo');
+//         $collection = $db->selectCollection('event_organizers');
+
+//         $documents = $collection->find()->toArray();
+
+//         return response()->json($documents, 200);
+//     } catch (\Exception $e) {
+//         return response()->json(['error' => $e->getMessage()], 500);
+//     }
+// });
