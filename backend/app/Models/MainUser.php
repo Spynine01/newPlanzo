@@ -13,4 +13,8 @@ class MainUser extends Model
 
     protected $fillable = ['email', 'password', 'preferences'];
 
+    protected $casts = [
+        'preferences' => 'array', // Auto-convert JSON to array when fetching
+    ];
+
 }

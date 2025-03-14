@@ -34,3 +34,6 @@ Route::post('/userlogin', [MainUserController::class, 'login']);
 
 
 Route::post('/eventorg', [EventOrganisorArppoveController::class, 'login']);
+
+
+Route::post('/register', [MainUserController::class, 'register']);

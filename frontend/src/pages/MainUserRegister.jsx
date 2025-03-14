@@ -31,10 +31,27 @@ function MainUserRegister() {
   const { Comedy, Sports, Music } = state;
   const error = [Comedy, Sports, Music].filter((v) => v).length < 1;
 
-  function registerUser() {
-    // Registration logic goes here
-    console.log("Register button clicked!");
-  }
+  const registerUser = async () => {
+    const selectedPreferences = Object.keys(state).filter((key) => state[key]);
+
+    try {
+      const response = await axios.post("http://localhost:8000/api/register", {
+        email,
+        password,
+        preferences: selectedPreferences, // Send preferences as an array
+      });
+
+      console.log("User registered:", response.data);
+      alert("Registration successful!");
+    } catch (error) {
+      console.error("Error registering user:", error.response?.data);
+      alert("Registration failed!");
+    }
+
+
+
+  };
+
 
   return (
     <Container maxWidth="xs">
