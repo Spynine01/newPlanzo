@@ -3,7 +3,7 @@ import { Container, TextField, Button, Typography, Box } from "@mui/material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-function EventOrgLogin() {
+function MainUserLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,7 +16,7 @@ function EventOrgLogin() {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/eventorg", {
+      const response = await axios.post("http://127.0.0.1:8000/api/userlogin", {
         email,
         password,
       });
@@ -74,4 +74,4 @@ function EventOrgLogin() {
   );
 }
 
-export default EventOrgLogin;
+export default MainUserLogin;

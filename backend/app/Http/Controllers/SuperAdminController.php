@@ -11,8 +11,8 @@ class SuperAdminController extends Controller
     {
         $superAdmin = DB::table('super_admin')
             ->where('user', $request->user)
-            ->where('password', $request->password)
-            ->first();
+            ->where('password', $request->password);
+            
 
             if ($superAdmin) {
                 return response()->json([

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MainUserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuperAdminController;
@@ -27,6 +28,9 @@ Route::get('/test', function () {
 
 
 Route::post('/superadmin', [SuperAdminController::class, 'login']);
+
+
+Route::post('/userlogin', [MainUserController::class, 'login']);
 
 
 Route::post('/eventorg', [EventOrganisorArppoveController::class, 'login']);
