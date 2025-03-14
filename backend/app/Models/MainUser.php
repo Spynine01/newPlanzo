@@ -11,6 +11,6 @@ class MainUser extends Model
 
     protected $table = 'main_users';
 
-    protected $fillable = ['email', 'password'];
+    protected $fillable = ['email', 'password', 'preferences'];
 
 }

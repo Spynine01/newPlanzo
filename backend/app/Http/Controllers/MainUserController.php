@@ -19,7 +19,7 @@ class MainUserController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Login Successful',
-                    'redirect' => 'eventDashboard' // Send redirect URL
+                    'redirect' => 'events' // Send redirect URL
                 ]);
             }
         

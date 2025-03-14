@@ -23,7 +23,7 @@ function MainUserLogin() {
 
       if (response.data.success) {
         localStorage.setItem("eventorg", response.data.email); // Store session manually
-        navigate("/eventDashboard"); // Redirect after login
+        navigate("/events"); // Redirect after login
       } else {
         setError(response.data.message);
       }
@@ -36,7 +36,7 @@ function MainUserLogin() {
     <Container maxWidth="xs">
       <Box sx={{ mt: 10, p: 3, boxShadow: 3, borderRadius: 2 }}>
         <Typography variant="h5" align="center" gutterBottom>
-          Event Organisor Login
+          User Login
         </Typography>
 
         {error && <Typography color="error">{error}</Typography>}
