@@ -7,6 +7,7 @@ import EventOrgLogin from './EventOrgLogin';
 import EventOrgDashboard from './EventOrgDashboard';
 import MainUserLogin from './MainUserLogin';
 import Events from './Events';
+import MainUserRegister from './MainUserRegister';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -35,6 +36,7 @@ return (
       <Route path="/dashboard" element={<SuperPage />} />
       <Route path="/eventOrgLogin" element={<EventOrgLogin />} />
       <Route path="/eventDashboard" element={<EventOrgDashboard />} />
+      <Route path="/userRegister" element={<MainUserRegister />} />
       <Route path="/userLogin" element={<MainUserLogin />} />
       <Route path="/events" element={<Events />} />
     </Routes>
