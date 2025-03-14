@@ -5,6 +5,8 @@ import axios from 'axios'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SuperAdminLogin from './superAdminLogin';
 import SuperPage from './SuperPage';
+import EventOrgLogin from './EventOrgLogin';
+import EventOrgDashboard from './EventOrgDashboard';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -31,6 +33,8 @@ return (
     <Routes>
       <Route path="" element={<SuperAdminLogin />} />
       <Route path="/dashboard" element={<SuperPage />} />
+      <Route path="/eventOrgLogin" element={<EventOrgLogin />} />
+      <Route path="/eventDashboard" element={<EventOrgDashboard />} />
     </Routes>
   </Router>
 );
