@@ -7,6 +7,7 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\EventOrganisorArppoveController;
 use App\Http\Controllers\EventOrganisorPendingController;
 use MongoDB\Client;
+use App\Http\Controllers\EventController;
 
 
 /*
@@ -59,3 +60,10 @@ Route::get('/eventOrgFetch', [EventOrganisorPendingController::class, 'index']);
 //         return response()->json(['error' => $e->getMessage()], 500);
 //     }
 // });
+
+// Event routes
+Route::apiResource('events', EventController::class);
+
+// Public event routes (no authentication required)
+Route::get('events', [EventController::class, 'index']);
+Route::get('events/{event}', [EventController::class, 'show']);
