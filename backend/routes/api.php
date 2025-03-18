@@ -8,6 +8,8 @@ use App\Http\Controllers\EventOrganisorArppoveController;
 use App\Http\Controllers\EventOrganisorPendingController;
 use MongoDB\Client;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\AdminRecommendationController;
+use App\Http\Controllers\WalletController;
 
 
 /*
@@ -67,3 +69,16 @@ Route::apiResource('events', EventController::class);
 // Public event routes (no authentication required)
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Wallet routes
+    Route::get('/wallet', [WalletController::class, 'show']);
+    Route::post('/wallet/top-up', [WalletController::class, 'topUp']);
+    Route::post('/wallet/request-recommendation', [WalletController::class, 'requestRecommendation']);
+
+    // Admin recommendation routes
+    Route::get('/admin/recommendations', [AdminRecommendationController::class, 'index']);
+    Route::post('/admin/recommendations', [AdminRecommendationController::class, 'store']);
+    Route::put('/admin/recommendations/{recommendation}', [AdminRecommendationController::class, 'update']);
+    Route::get('/events/{event}/recommendations', [AdminRecommendationController::class, 'getEventRecommendations']);
+});
