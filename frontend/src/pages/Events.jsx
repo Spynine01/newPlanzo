@@ -4,9 +4,29 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import { eventApi } from '../services/api';
+import { Select } from '../components/ui/Select';
 
 // Default placeholder image for events without images
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIEltYWdlIEF2YWlsYWJsZTwvdGV4dD48L3N2Zz4=';
+
+const CATEGORIES = [
+  'All',
+  'Music',
+  'Sports',
+  'Arts',
+  'Food',
+  'Business',
+  'Education',
+  'Other'
+];
+
+const PRICE_RANGES = [
+  { label: 'All Prices', value: 'all' },
+  { label: 'Under ₹500', value: '0-500' },
+  { label: '₹500 - ₹1000', value: '500-1000' },
+  { label: '₹1000 - ₹2000', value: '1000-2000' },
+  { label: 'Over ₹2000', value: '2000+' }
+];
 
 const Events = () => {
   const navigate = useNavigate();
@@ -14,15 +34,28 @@ const Events = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    category: 'All',
+    priceRange: 'all',
+    location: '',
+    dateRange: 'all'
+  });
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [filters]);
 
   const fetchEvents = async (search = '') => {
     try {
       setLoading(true);
-      const response = await eventApi.getEvents({ search });
+      const params = {
+        search,
+        category: filters.category !== 'All' ? filters.category : undefined,
+        price_range: filters.priceRange !== 'all' ? filters.priceRange : undefined,
+        location: filters.location || undefined,
+        date_range: filters.dateRange !== 'all' ? filters.dateRange : undefined
+      };
+      const response = await eventApi.getEvents(params);
       setEvents(response.data.data);
       setError(null);
     } catch (err) {
@@ -37,6 +70,13 @@ const Events = () => {
     const term = e.target.value;
     setSearchTerm(term);
     fetchEvents(term);
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
   const handleViewDetails = (eventId) => {
@@ -64,17 +104,62 @@ const Events = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Upcoming Events</h1>
-          <div className="max-w-xl">
-            <Input
-              type="text"
-              placeholder="Search events by name, category, or location"
-              value={searchTerm}
-              onChange={handleSearch}
-              className="w-full"
-            />
+          
+          {/* Search and Filters Section */}
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="col-span-1 md:col-span-2">
+                <Input
+                  type="text"
+                  placeholder="Search events by name, category, or location"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="w-full"
+                />
+              </div>
+              <Select
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                className="w-full"
+              >
+                {CATEGORIES.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </Select>
+              <Select
+                value={filters.priceRange}
+                onChange={(e) => handleFilterChange('priceRange', e.target.value)}
+                className="w-full"
+              >
+                {PRICE_RANGES.map(range => (
+                  <option key={range.value} value={range.value}>{range.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <Input
+                type="text"
+                placeholder="Filter by location"
+                value={filters.location}
+                onChange={(e) => handleFilterChange('location', e.target.value)}
+                className="w-full"
+              />
+              <Select
+                value={filters.dateRange}
+                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                className="w-full"
+              >
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="future">Future Events</option>
+              </Select>
+            </div>
           </div>
         </div>
 
+        {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map(event => (
             <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300">

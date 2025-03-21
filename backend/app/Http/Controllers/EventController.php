@@ -25,8 +25,47 @@ class EventController extends Controller
                 });
             }
 
-            if ($request->category) {
+            if ($request->category && $request->category !== 'All') {
                 $query->where('category', $request->category);
+            }
+
+            if ($request->location) {
+                $query->where('location', 'like', "%{$request->location}%");
+            }
+
+            if ($request->price_range) {
+                switch ($request->price_range) {
+                    case '0-500':
+                        $query->where('price', '<=', 500);
+                        break;
+                    case '500-1000':
+                        $query->whereBetween('price', [500, 1000]);
+                        break;
+                    case '1000-2000':
+                        $query->whereBetween('price', [1000, 2000]);
+                        break;
+                    case '2000+':
+                        $query->where('price', '>', 2000);
+                        break;
+                }
+            }
+
+            if ($request->date_range) {
+                $today = now()->startOfDay();
+                switch ($request->date_range) {
+                    case 'today':
+                        $query->whereDate('date', $today);
+                        break;
+                    case 'week':
+                        $query->whereBetween('date', [$today, $today->copy()->endOfWeek()]);
+                        break;
+                    case 'month':
+                        $query->whereBetween('date', [$today, $today->copy()->endOfMonth()]);
+                        break;
+                    case 'future':
+                        $query->where('date', '>=', $today);
+                        break;
+                }
             }
 
             $events = $query->latest()->paginate(12);
