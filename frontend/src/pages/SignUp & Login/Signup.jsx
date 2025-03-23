@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import './Signup.css'
-import api from '../../services/api'
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import './Signup.css';
+import api from '../../services/api';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -10,7 +10,9 @@ export default function Signup() {
     email: '',
     password: '',
     password_confirmation: '',
-    preferences: ['General'] // Default preference
+    role: 'user', // ✅ Add default role to avoid "undefined"
+    preferences: [''], // Default preference
+    pdf: null, // For event organizer
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,6 +23,13 @@ export default function Signup() {
       [e.target.name]: e.target.value
     });
     setError(''); // Clear error when user types
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({
+      ...formData,
+      pdf: e.target.files[0] // ✅ Store file properly
+    });
   };
 
   const validateForm = () => {
@@ -44,29 +53,41 @@ export default function Signup() {
       setError('Passwords do not match');
       return false;
     }
+    if (formData.role === 'event_organizer' && !formData.pdf) {
+      setError('Event Organizers must upload a PDF');
+      return false;
+    }
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setLoading(true);
     setError('');
-  
-    // Set API endpoint dynamically based on role
+
     const endpoint = formData.role === 'event_organizer' ? '/eventOrgRegister' : '/register';
-  
+    const formDataToSend = new FormData();
+
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('password', formData.password);
+    formDataToSend.append('password_confirmation', formData.password_confirmation);
+    formDataToSend.append('role', formData.role);
+    formData.preferences.forEach((preference, index) => {
+      formDataToSend.append(`preferences[${index}]`, preference);
+    });
+
+    if (formData.role === 'event_organizer' && formData.pdf) {
+      formDataToSend.append('pdf', formData.pdf);
+    }
+
     try {
-      const response = await api.post(endpoint, {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        password_confirmation: formData.password_confirmation,
-        role: formData.role,  // Send selected role
-        preferences: formData.preferences
+      const response = await api.post(endpoint, formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-  
+
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/events');
@@ -98,8 +119,8 @@ export default function Signup() {
               <div className="input">
                 <input 
                   type="text" 
-                  name='name' 
-                  placeholder='Full Name'
+                  name="name" 
+                  placeholder="Full Name"
                   value={formData.name}
                   onChange={handleChange}
                   required
@@ -109,8 +130,8 @@ export default function Signup() {
               <div className="input">
                 <input 
                   type="email" 
-                  name='email' 
-                  placeholder='Email'
+                  name="email" 
+                  placeholder="Email"
                   value={formData.email}
                   onChange={handleChange}
                   required
@@ -120,8 +141,8 @@ export default function Signup() {
               <div className="input">
                 <input 
                   type="password" 
-                  name='password' 
-                  placeholder='Password'
+                  name="password" 
+                  placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
                   required
@@ -132,8 +153,8 @@ export default function Signup() {
               <div className="input">
                 <input 
                   type="password" 
-                  name='password_confirmation' 
-                  placeholder='Confirm Password'
+                  name="password_confirmation" 
+                  placeholder="Confirm Password"
                   value={formData.password_confirmation}
                   onChange={handleChange}
                   required
@@ -142,21 +163,21 @@ export default function Signup() {
               </div>
 
               {/* Role Selection */}
-            <div className="input">
-              <select name="role" value={formData.role} onChange={handleChange} disabled={loading}>
-                <option value="user">User</option>
-                <option value="event_organizer">Event Organizer</option>
-              </select>
-            </div>
+<div className="input">
+  <select name="role" value={formData.role} onChange={handleChange} disabled={loading}>
+    <option value="user">User</option>
+    <option value="event_organizer">Event Organizer</option>
+  </select>
+</div>
 
-            {/* Show PDF Upload only if Event Organizer is selected */}
-            {formData.role === 'event_organizer' && (
-              <div className="input">
-                <label>Upload Event Details (PDF)</label>
-                <input type="file" accept="application/pdf" onChange={handleFileChange} disabled={loading} />
-              </div>
-            )}
-            
+{/* Show PDF Upload only if Event Organizer is selected */}
+{formData.role === 'event_organizer' && (
+  <div className="input file-upload">
+    <label htmlFor="pdf-upload">Upload PDF File</label>
+    <input id="pdf-upload" type="file" accept="application/pdf" onChange={handleFileChange} disabled={loading} />
+  </div>
+)}
+              
               <div className="input">
                 <input 
                   type="submit" 
@@ -170,5 +191,5 @@ export default function Signup() {
         <Link to="/login" className="btn signup">Login</Link>
       </div>
     </div>
-  )
+  );
 }

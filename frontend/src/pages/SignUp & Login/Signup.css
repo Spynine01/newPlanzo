@@ -186,3 +186,37 @@ input[type="submit"]{
 .btn:hover{
     border-radius: 50%;
 }
+
+.input select,
+.input input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.input.file-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    text-align: center;
+}
+
+.input.file-upload label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #3240c1;
+    margin-bottom: 5px;
+}
+
+.input.file-upload input[type="file"] {
+    cursor: pointer;
+    font-size: 0.9em;
+    background: transparent;
+    border: none;
+    text-align: center;
+}

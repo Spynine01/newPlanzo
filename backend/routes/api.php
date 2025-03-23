@@ -35,6 +35,7 @@ Route::get('/test', function () {
 });
 
 Route::post('/login', [LoginController::class, 'login']);
+
 Route::post('/register', [RegisterController::class, 'register']);
 
 Route::post('/superadmin', [SuperAdminController::class, 'login']);
@@ -43,7 +44,7 @@ Route::post('/userlogin', [MainUserController::class, 'login']);
 
 Route::post('/eventorg', [EventOrganisorArppoveController::class, 'login']);
 
-Route::post('/eventOrgRegister', [EventOrganisorPendingController::class, 'store']);
+Route::post('/eventOrgRegister', [RegisterController::class, 'register']);
 
 Route::get('/eventOrgFetch', [EventOrganisorPendingController::class, 'index']);
 
