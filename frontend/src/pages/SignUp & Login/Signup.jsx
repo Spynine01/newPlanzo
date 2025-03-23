@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-import React from 'react'
-import './Signup.css'
-
-export default function Signup() {
-=======
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import './Signup.css'
@@ -85,35 +79,10 @@ export default function Signup() {
     }
   };
 
->>>>>>> e2989bcc5e6114891a28c1bb0c450081ebec68bf
   return (
     <div>
       <div className="container">
         <div className="drop">
-<<<<<<< HEAD
-            <div className="context">
-                <h2>Sign Up</h2>
-                <form>
-                    <div className="input">
-                        <input type="text" name='username' placeholder='Username' />
-                    </div>
-                    <div className="input">
-                        <input type="Email" name='Email' placeholder='Email' />
-                    </div>
-                    <div className="input">
-                        <input type="password" name='password' placeholder='Password' />
-                    </div>
-                    <div className="input">
-                        <input type="password" name='confirmpassword' placeholder='Confirm Password' />
-                    </div>
-                    <div className="input">
-                        <input type="submit" value='Sign Up' href="#" />
-                    </div>
-                </form>
-            </div>
-        </div>
-        <a href='./Login.jsx' className="btn signup">Login</a>
-=======
           <div className="context">
             <h2>Sign Up</h2>
             {error && (
@@ -178,7 +147,6 @@ export default function Signup() {
           </div>
         </div>
         <Link to="/login" className="btn signup">Login</Link>
->>>>>>> e2989bcc5e6114891a28c1bb0c450081ebec68bf
       </div>
     </div>
   )
