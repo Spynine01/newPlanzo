@@ -11,7 +11,7 @@ export default function Signup() {
     password: '',
     password_confirmation: '',
     role: 'user', // ✅ Add default role to avoid "undefined"
-    preferences: ['General'], // Default preference
+    preferences: [], // no preference so that the form shows the error
     pdf: null, // For event organizer
   });
   const [error, setError] = useState('');
@@ -69,6 +69,12 @@ export default function Signup() {
       setError('Event Organizers must upload a PDF');
       return false;
     }
+
+    if (formData.preferences.length === 0) {
+      setError("Please select at least one preference.");
+      return;
+    }
+
     return true;
   };
 
@@ -77,7 +83,8 @@ export default function Signup() {
     if (!validateForm()) return;
 
     setLoading(true);
-    setError('');
+    setError(''); 
+
 
     const endpoint = formData.role === 'event_organizer' ? '/eventOrgRegister' : '/register';
     const formDataToSend = new FormData();
