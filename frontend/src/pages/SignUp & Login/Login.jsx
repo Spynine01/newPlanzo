@@ -39,22 +39,28 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+  
     setLoading(true);
     setError('');
-    
+  
     try {
       const response = await api.post('/login', {
         email: formData.email,
         password: formData.password
       });
-      
+  
+      // ✅ Store token and user data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      navigate('/events');
+  
+      // ✅ Redirect based on role
+      if (response.data.user.role === 'event_organizer') {
+        navigate('/event-dashboard'); // Change this route based on your app
+      } else {
+        navigate('/events');
+      }
     } catch (error) {
       if (error.response?.data?.errors) {
-        // Handle validation errors from the backend
         const firstError = Object.values(error.response.data.errors)[0][0];
         setError(firstError);
       } else if (error.response?.data?.message) {
