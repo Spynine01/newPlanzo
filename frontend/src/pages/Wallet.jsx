@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { walletApi } from '../services/api';
+import RazorpayPayment from '../components/Payment/RazorpayPayment';
+import api from '../services/api';
 
 const Wallet = () => {
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [topUpAmount, setTopUpAmount] = useState('');
-  const [showTopUpForm, setShowTopUpForm] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchWalletData();
@@ -19,46 +19,53 @@ const Wallet = () => {
 
   const fetchWalletData = async () => {
     try {
-      const response = await walletApi.getWallet();
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await api.get('/wallet');
       setWallet(response.data.wallet);
     } catch (err) {
-      setError('Failed to load wallet data');
-      console.error(err);
+      console.error('Failed to load wallet data:', err);
+      if (err.response?.status === 401) {
+        navigate('/login');
+      } else {
+        setError('Failed to load wallet data');
+      }
     }
   };
 
   const fetchTransactions = async () => {
     try {
-      const response = await walletApi.getTransactions();
-      setTransactions(response.data.transactions);
-    } catch (err) {
-      setError('Failed to load transactions');
-      console.error(err);
-    }
-  };
-
-  const handleTopUp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const amount = parseFloat(topUpAmount);
-      if (isNaN(amount) || amount <= 0) {
-        setError('Please enter a valid amount');
+      const token = localStorage.getItem('token');
+      if (!token) {
         return;
       }
 
-      const response = await walletApi.topUp(amount);
-      setWallet(response.data.wallet);
-      setTransactions(prev => [response.data.transaction, ...prev]);
-      setTopUpAmount('');
-      setShowTopUpForm(false);
+      const response = await api.get('/wallet/transactions');
+      setTransactions(response.data || []); // Handle direct array response
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to top up wallet');
+      console.error('Failed to load transactions:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = async (response) => {
+    try {
+      await fetchWalletData();
+      await fetchTransactions();
+      setError(null); // Clear any previous errors
+    } catch (err) {
+      console.error('Error updating wallet after payment:', err);
+      setError('Failed to update wallet data after payment');
+    }
+  };
+
+  const handlePaymentFailure = (error) => {
+    setError(typeof error === 'string' ? error : 'Payment failed. Please try again.');
   };
 
   const formatDate = (dateString) => {
@@ -77,6 +84,30 @@ const Wallet = () => {
       currency: 'INR'
     }).format(amount);
   };
+
+  if (loading && !wallet) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!wallet) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Failed to load wallet data</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-blue-500 hover:text-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -99,58 +130,42 @@ const Wallet = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">
-                {wallet ? formatAmount(wallet.balance) : 'Loading...'}
+                {formatAmount(wallet.balance)}
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                Available Coins: {wallet?.coins || 0}
+                Available Coins: {wallet.coins}
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>Add Money</CardTitle>
             </CardHeader>
             <CardContent>
-              {!showTopUpForm ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setShowTopUpForm(true)}
-                  className="w-full"
-                >
-                  Top Up Wallet
-                </Button>
-              ) : (
-                <form onSubmit={handleTopUp} className="space-y-4">
-                  <Input
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Amount (₹)
+                  </label>
+                  <input
                     type="number"
                     value={topUpAmount}
                     onChange={(e) => setTopUpAmount(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter amount"
-                    min="0"
-                    step="0.01"
-                    required
+                    min="1"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowTopUpForm(false)}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      className="flex-1"
-                      disabled={loading}
-                    >
-                      {loading ? 'Processing...' : 'Top Up'}
-                    </Button>
-                  </div>
-                </form>
-              )}
+                </div>
+                {topUpAmount && Number(topUpAmount) > 0 && (
+                  <RazorpayPayment
+                    amount={parseFloat(topUpAmount) * 100} // Convert to paise
+                    onSuccess={handlePaymentSuccess}
+                    onFailure={handlePaymentFailure}
+                    type="wallet"
+                  />
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -160,7 +175,9 @@ const Wallet = () => {
             <CardTitle>Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
-            {transactions.length === 0 ? (
+            {loading ? (
+              <p className="text-gray-500 text-center py-4">Loading transactions...</p>
+            ) : transactions.length === 0 ? (
               <p className="text-gray-500 text-center py-4">No transactions found</p>
             ) : (
               <div className="space-y-4">
@@ -171,22 +188,27 @@ const Wallet = () => {
                   >
                     <div>
                       <p className="font-medium text-gray-900">
-                        {transaction.type === 'top_up' ? 'Wallet Top Up' : 'Recommendation Request'}
+                        {transaction.type === 'credit' ? 'Wallet Top Up' : 'Purchase'}
                       </p>
                       <p className="text-sm text-gray-500">
                         {formatDate(transaction.created_at)}
                       </p>
+                      {transaction.coins > 0 && (
+                        <p className="text-sm text-blue-600">
+                          +{transaction.coins} coins
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className={`font-medium ${
-                        transaction.type === 'top_up' ? 'text-green-600' : 'text-red-600'
+                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {transaction.type === 'top_up' ? '+' : '-'}
+                        {transaction.type === 'credit' ? '+' : '-'}
                         {formatAmount(transaction.amount)}
                       </p>
-                      {transaction.type === 'recommendation' && (
-                        <p className="text-sm text-gray-500">
-                          {transaction.coins} coins
+                      {transaction.platform_fee > 0 && (
+                        <p className="text-xs text-gray-500">
+                          Fee: {formatAmount(transaction.platform_fee)}
                         </p>
                       )}
                     </div>

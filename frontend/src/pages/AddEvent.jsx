@@ -72,7 +72,15 @@ const AddEvent = () => {
 
     setRecommendationLoading(true);
     try {
+      // First create the event if it doesn't exist
+      let eventId;
+      if (!formData.id) {
+        const eventResponse = await eventApi.createEvent(formDataToSend);
+        eventId = eventResponse.data.event.id;
+      }
+
       const response = await api.post('/wallet/request-recommendation', {
+        event_id: eventId || formData.id,
         type,
         coins: 10
       });
@@ -82,7 +90,7 @@ const AddEvent = () => {
         coins: response.data.new_balance
       }));
 
-      alert('Recommendation request submitted successfully!');
+      alert(`Recommendation request submitted successfully! Our experts will review your ${type} and provide guidance soon.`);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to request recommendation');
     } finally {

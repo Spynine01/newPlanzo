@@ -18,7 +18,7 @@ const AdminDashboard = () => {
   const fetchRecommendations = async () => {
     try {
       const response = await adminApi.getRecommendations();
-      setRecommendations(response.data.recommendations);
+      setRecommendations(response.data);
     } catch (err) {
       setError('Failed to load recommendations');
       console.error(err);

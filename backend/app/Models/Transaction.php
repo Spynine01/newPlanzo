@@ -18,7 +18,9 @@ class Transaction extends Model
         'coins',
         'platform_fee',
         'status',
-        'details'
+        'details',
+        'payment_id',
+        'description'
     ];
 
     protected $casts = [

@@ -29,4 +29,9 @@ class Event extends Model
         'price' => 'decimal:2',
         'available_tickets' => 'integer'
     ];
+
+    public function adminRecommendations()
+    {
+        return $this->hasMany(AdminRecommendation::class);
+    }
 }

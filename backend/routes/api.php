@@ -10,6 +10,9 @@ use MongoDB\Client;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AdminRecommendationController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\RazorpayController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\LoginController;
 
 
 /*
@@ -31,19 +34,14 @@ Route::get('/test', function () {
     return response()->json(['message' => 'API is working!']);
 });
 
-
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/register', [RegisterController::class, 'register']);
 
 Route::post('/superadmin', [SuperAdminController::class, 'login']);
 
-
 Route::post('/userlogin', [MainUserController::class, 'login']);
 
-
 Route::post('/eventorg', [EventOrganisorArppoveController::class, 'login']);
-
-
-Route::post('/register', [MainUserController::class, 'register']);
-
 
 Route::post('/eventOrgRegister', [EventOrganisorPendingController::class, 'store']);
 
@@ -71,8 +69,11 @@ Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [LoginController::class, 'logout']);
+    
     // Wallet routes
-    Route::get('/wallet', [WalletController::class, 'show']);
+    Route::get('/wallet', [WalletController::class, 'getWallet']);
+    Route::get('/wallet/transactions', [WalletController::class, 'getTransactions']);
     Route::post('/wallet/top-up', [WalletController::class, 'topUp']);
     Route::post('/wallet/request-recommendation', [WalletController::class, 'requestRecommendation']);
 
@@ -81,4 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/recommendations', [AdminRecommendationController::class, 'store']);
     Route::put('/admin/recommendations/{recommendation}', [AdminRecommendationController::class, 'update']);
     Route::get('/events/{event}/recommendations', [AdminRecommendationController::class, 'getEventRecommendations']);
+
+    // Payment routes
+    Route::post('/create-order', [RazorpayController::class, 'createOrder']);
+    Route::post('/verify-payment', [RazorpayController::class, 'verifyPayment']);
 });

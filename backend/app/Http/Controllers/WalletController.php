@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class WalletController extends Controller
 {
-    public function show()
+    public function getWallet()
     {
         $wallet = auth()->user()->wallet;
         $transactions = $wallet->transactions()->latest()->get();
@@ -17,6 +17,24 @@ class WalletController extends Controller
             'wallet' => $wallet,
             'transactions' => $transactions
         ]);
+    }
+
+    public function getTransactions()
+    {
+        try {
+            $wallet = auth()->user()->wallet;
+            $transactions = $wallet->transactions()
+                ->with('wallet.user')
+                ->latest()
+                ->get();
+
+            return response()->json($transactions);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to fetch transactions',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function topUp(Request $request)
