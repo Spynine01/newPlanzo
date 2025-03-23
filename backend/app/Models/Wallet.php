@@ -32,17 +32,17 @@ class Wallet extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    public function addCoins(int $amount, float $balance, float $platformFee = 0): void
+    public function addCoins(int $coins, float $amount, float $platformFee = 0): void
     {
-        $this->balance += $balance;
-        $this->coins += $amount;
+        $this->balance += $amount;
+        $this->coins += $coins;
         $this->save();
     }
 
-    public function deductCoins(int $amount): bool
+    public function deductCoins(int $coins): bool
     {
-        if ($this->coins >= $amount) {
-            $this->coins -= $amount;
+        if ($this->coins >= $coins) {
+            $this->coins -= $coins;
             $this->save();
             return true;
         }

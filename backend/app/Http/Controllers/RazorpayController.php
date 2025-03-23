@@ -123,41 +123,31 @@ class RazorpayController extends Controller
 
             // Store payment details based on type
             if ($notes['type'] === 'wallet') {
-                DB::transaction(function () use ($request, $order) {
+                DB::transaction(function () use ($request, $notes) {
                     // Get user's wallet
-                    $wallet = Wallet::where('user_id', auth()->id())->first();
+                    $wallet = Wallet::where('user_id', auth()->id())->firstOrFail();
                     
-                    if (!$wallet) {
-                        throw new \Exception('Wallet not found');
-                    }
-
                     // Calculate platform fee (5%)
                     $platformFee = $request->amount * 0.05;
                     
-                    // Calculate coins (10 coins per unit after platform fee)
-                    $amountAfterFee = $request->amount - $platformFee;
-                    $coins = (int)($amountAfterFee * 10);
-
-                    // Create transaction record
+                    // Calculate coins (1 coin = 10 rupees)
+                    $coins = (int) (($request->amount - $platformFee) / 10);
+                    
+                    // Create transaction
                     $transaction = Transaction::create([
                         'wallet_id' => $wallet->id,
-                        'amount' => $request->amount,
                         'type' => 'credit',
-                        'description' => 'Wallet top up via Razorpay',
-                        'payment_id' => $request->razorpay_payment_id,
-                        'status' => 'completed',
-                        'platform_fee' => $platformFee,
+                        'amount' => $request->amount,
                         'coins' => $coins,
-                        'details' => [
-                            'order_id' => $request->razorpay_order_id,
-                            'payment_method' => 'razorpay'
-                        ]
+                        'platform_fee' => $platformFee,
+                        'status' => 'completed',
+                        'payment_id' => $request->razorpay_payment_id,
+                        'order_id' => $request->razorpay_order_id,
+                        'description' => 'Wallet Top Up'
                     ]);
 
                     // Update wallet balance and coins
-                    $wallet->balance = $wallet->balance + $request->amount;
-                    $wallet->coins = $wallet->coins + $coins;
-                    $wallet->save();
+                    $wallet->addCoins($coins, $request->amount - $platformFee, $platformFee);
 
                     Log::info('Wallet updated successfully', [
                         'wallet_id' => $wallet->id,

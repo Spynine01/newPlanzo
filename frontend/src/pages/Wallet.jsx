@@ -9,7 +9,7 @@ const Wallet = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [topUpAmount, setTopUpAmount] = useState('');
+  const [desiredCoins, setDesiredCoins] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,7 +57,8 @@ const Wallet = () => {
     try {
       await fetchWalletData();
       await fetchTransactions();
-      setError(null); // Clear any previous errors
+      setError(null);
+      setDesiredCoins('');
     } catch (err) {
       console.error('Error updating wallet after payment:', err);
       setError('Failed to update wallet data after payment');
@@ -66,6 +67,19 @@ const Wallet = () => {
 
   const handlePaymentFailure = (error) => {
     setError(typeof error === 'string' ? error : 'Payment failed. Please try again.');
+  };
+
+  const calculateAmount = (coins) => {
+    // Calculate base amount needed for desired coins (1 coin = 10 rupees)
+    const baseAmount = coins * 10;
+    // Add 5% platform fee
+    const platformFee = baseAmount * 0.05;
+    const totalAmount = baseAmount + platformFee;
+    return {
+      baseAmount,
+      platformFee,
+      totalAmount
+    };
   };
 
   const formatDate = (dateString) => {
@@ -109,12 +123,14 @@ const Wallet = () => {
     );
   }
 
+  const { baseAmount, platformFee, totalAmount } = calculateAmount(Number(desiredCoins) || 0);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Wallet</h1>
-          <p className="mt-2 text-sm text-gray-600">Manage your wallet balance and view transaction history</p>
+          <p className="mt-2 text-sm text-gray-600">Manage your coins and view transaction history</p>
         </div>
 
         {error && (
@@ -126,40 +142,47 @@ const Wallet = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Balance</CardTitle>
+              <CardTitle>Available Coins</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">
-                {formatAmount(wallet.balance)}
+                {wallet.coins} coins
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                Available Coins: {wallet.coins}
+                Balance: {formatAmount(wallet.balance)}
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Add Money</CardTitle>
+              <CardTitle>Add Coins</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Amount (₹)
+                    Number of Coins
                   </label>
                   <input
                     type="number"
-                    value={topUpAmount}
-                    onChange={(e) => setTopUpAmount(e.target.value)}
+                    value={desiredCoins}
+                    onChange={(e) => setDesiredCoins(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter amount"
+                    placeholder="Enter number of coins"
                     min="1"
                   />
                 </div>
-                {topUpAmount && Number(topUpAmount) > 0 && (
+                {desiredCoins && Number(desiredCoins) > 0 && (
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>Base Amount: {formatAmount(baseAmount)}</p>
+                    <p>Platform Fee (5%): {formatAmount(platformFee)}</p>
+                    <p className="font-semibold">Total Amount: {formatAmount(totalAmount)}</p>
+                  </div>
+                )}
+                {desiredCoins && Number(desiredCoins) > 0 && (
                   <RazorpayPayment
-                    amount={parseFloat(topUpAmount) * 100} // Convert to paise
+                    amount={totalAmount * 100} // Convert to paise
                     onSuccess={handlePaymentSuccess}
                     onFailure={handlePaymentFailure}
                     type="wallet"
