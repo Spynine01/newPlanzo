@@ -11,7 +11,7 @@ export default function Signup() {
     password: '',
     password_confirmation: '',
     role: 'user', // ✅ Add default role to avoid "undefined"
-    preferences: [''], // Default preference
+    preferences: ['General'], // Default preference
     pdf: null, // For event organizer
   });
   const [error, setError] = useState('');
@@ -31,6 +31,18 @@ export default function Signup() {
       pdf: e.target.files[0] // ✅ Store file properly
     });
   };
+
+  const handleCheckboxChange = (e) => {
+    const value = e.target.value;
+    setFormData((prevData) => {
+      const updatedPreferences = prevData.preferences.includes(value)
+        ? prevData.preferences.filter((pref) => pref !== value) // Remove if already selected
+        : [...prevData.preferences, value]; // Add if not selected
+  
+      return { ...prevData, preferences: updatedPreferences };
+    });
+  };
+  
 
   const validateForm = () => {
     if (!formData.name.trim()) {
@@ -169,6 +181,104 @@ export default function Signup() {
     <option value="event_organizer">Event Organizer</option>
   </select>
 </div>
+
+{/* Show Preferences if User is selected */}
+{formData.role === 'user' && (
+  <div className="input file-upload preferences-container">  
+    <label>Preferences</label> <br />
+    
+    <div className="preferences-options">
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Music" 
+          checked={formData.preferences.includes("Music")}
+          onChange={handleCheckboxChange}
+        />
+        Music
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Technology" 
+          checked={formData.preferences.includes("Technology")}
+          onChange={handleCheckboxChange}
+        />
+        Technology
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Sports" 
+          checked={formData.preferences.includes("Sports")}
+          onChange={handleCheckboxChange}
+        />
+        Sports
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Arts" 
+          checked={formData.preferences.includes("Arts")}
+          onChange={handleCheckboxChange}
+        />
+        Arts
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Food & Drink" 
+          checked={formData.preferences.includes("Food & Drink")}
+          onChange={handleCheckboxChange}
+        />
+        Food & Drink
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Business" 
+          checked={formData.preferences.includes("Business")}
+          onChange={handleCheckboxChange}
+        />
+        Business
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Education" 
+          checked={formData.preferences.includes("Education")}
+          onChange={handleCheckboxChange}
+        />
+        Education
+      </label>
+
+      <label>
+        <input 
+          type="checkbox" 
+          name="preferences" 
+          value="Other" 
+          checked={formData.preferences.includes("Other")}
+          onChange={handleCheckboxChange}
+        />
+        Other
+      </label>
+    </div>
+  </div>
+)}
+
 
 {/* Show PDF Upload only if Event Organizer is selected */}
 {formData.role === 'event_organizer' && (

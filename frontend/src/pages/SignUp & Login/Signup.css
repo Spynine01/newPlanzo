@@ -1,36 +1,56 @@
-*{
+/* Reset styles */
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: sans-serif;
 }
 
-body{
+/* Fix: Make body scroll naturally instead of flex centering */
+body {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center; /* Change this */
     min-height: 100vh;
     background: #effeef;
 }
 
-.container{
-    position: relative;
-    left: -80px;
+/* Add margin to prevent overlap with navbar */
+.container {
+    position: relative; /* Ensure it stays in place */
+    top: 0px; /* Move it slightly down */
+    left: 0; /* Reset left positioning if needed */
     display: flex;
     justify-content: center;
     align-items: center;
 }
+/*  */
 
-.drop{
-    position: relative;
-    width: 400px;
-    height: 400px;
-    transition: 0.5s;
+/* Ensure form stays below navbar */
+.context {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 62% 38% 24% 76% / 59% 60% 44% 41%;
-    box-shadow: inset 20px 20px 20px rgba(0, 0, 0, 0.05), 25px 35px 20px rgba(0, 0, 0, 0.05), 25px 30px 30px rgba(0, 0, 0, 0.05), inset -20px -20px 25px rgba(255, 255, 255, 0.9);
+    max-width: 100%;
+    text-align: center;
+}
+.drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px; /* Added padding for internal spacing */
+    min-width: 400px; /* Ensure minimum width */
+    min-height: 400px; /* Ensure minimum height */
+    width: auto; /* Allow it to expand */
+    height: auto; /* Allow it to expand */
+    border-radius: 62% 38% 24% 76% / 59% 60% 44% 41%; /* Keeps the organic shape */
+    box-shadow: inset 20px 20px 20px rgba(0, 0, 0, 0.05),
+                25px 35px 20px rgba(0, 0, 0, 0.05),
+                25px 30px 30px rgba(0, 0, 0, 0.05),
+                inset -20px -20px 25px rgba(255, 255, 255, 0.9);
 }
 
 .drop:hover{
@@ -219,4 +239,54 @@ input[type="submit"]{
     background: transparent;
     border: none;
     text-align: center;
+}
+
+/* Apply similar styling as File Upload */
+.input.file-upload.preferences-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    width: 67%;
+}
+
+/* Title styling (same as file-upload label) */
+.input.file-upload.preferences-container label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #3240c1;
+    margin-bottom: 5px;
+}
+
+/* Checkbox container */
+.preferences-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px; /* Adds spacing between checkboxes */
+}
+
+/* Individual checkboxes */
+.preferences-options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Checkbox styling */
+.preferences-options input[type="checkbox"] {
+    transform: scale(1.2); /* Makes checkboxes slightly bigger */
+    accent-color: #007bff; /* Match theme color */
+}
+
+.preferences-options label:has(input[value="Food & Drink"]) {
+    font-size: 12px;
+    white-space: nowrap;
+    max-width: 120px;
 }
