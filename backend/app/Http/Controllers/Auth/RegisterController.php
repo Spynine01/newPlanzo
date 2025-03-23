@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Wallet;
-use App\Models\EventOrgPending;
+use App\Models\EventOrg;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -18,9 +18,9 @@ class RegisterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users|unique:event_org_pending',
+            'email' => 'required|string|email|max:255|unique:users|unique:event_org',
             'password' => 'required|string|min:8|confirmed',
-            'preferences' => 'required|array',
+            'preferences' => 'required_if:role,user|array',
             'role' => 'required|string|in:user,event_organizer', // Validate role
             'pdf' => $request->role === 'event_organizer' ? 'required|mimes:pdf|max:2048' : ''
         ]);
@@ -42,12 +42,13 @@ class RegisterController extends Controller
                 }
 
                 // Store in event_org_pending
-                $eventOrg = EventOrgPending::create([
+                $eventOrg = EventOrg::create([
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
                     'pdf_path' => $pdfPath ?? null,
-                    'preferences' => json_encode($request->preferences)
+                    'preferences' => json_encode($request->preferences),
+                    'isVerified' => false
                 ]);
 
                 DB::commit();

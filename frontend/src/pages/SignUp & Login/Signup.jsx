@@ -70,7 +70,7 @@ export default function Signup() {
       return false;
     }
 
-    if (formData.preferences.length === 0) {
+    if (formData.role=== 'user'&&  formData.preferences.length === 0 ) {
       setError("Please select at least one preference.");
       return;
     }
