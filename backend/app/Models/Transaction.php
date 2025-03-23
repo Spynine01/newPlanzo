@@ -48,6 +48,6 @@ class Transaction extends Model
     public function calculateCoins(): int
     {
         $amountAfterFee = $this->amount - $this->platform_fee;
-        return (int) ($amountAfterFee * 10); // 1 USD = 10 coins
+        return (int) ($amountAfterFee / 10); // 1 coin = 10 rupees
     }
 }
