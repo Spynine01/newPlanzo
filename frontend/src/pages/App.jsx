@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState } from 'react'
 import axios from 'axios'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -32,6 +31,7 @@ fetchData();
 
 
 return (
+  <Router>
     <Routes>
       <Route path="" element={<SuperAdminLogin />} />
       <Route path="/dashboard" element={<SuperPage />} />
@@ -42,8 +42,8 @@ return (
       <Route path="/userLogin" element={<MainUserLogin />} />
       <Route path="/events" element={<Events />} />
     </Routes>
+  </Router>
 );
 }
 
-
-export default App
+export default App;
