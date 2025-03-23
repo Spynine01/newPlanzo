@@ -49,18 +49,18 @@ export default function Login() {
         password: formData.password
       });
   
-      // ✅ Store token and user data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
   
-      // ✅ Redirect based on role
       if (response.data.user.role === 'event_organizer') {
-        navigate('/event-dashboard'); // Change this route based on your app
+        navigate('/event-dashboard');
       } else {
         navigate('/events');
       }
     } catch (error) {
-      if (error.response?.data?.errors) {
+      if (error.response?.status === 403) {
+        setError('Your account is pending verification. Please wait for approval.');
+      } else if (error.response?.data?.errors) {
         const firstError = Object.values(error.response.data.errors)[0][0];
         setError(firstError);
       } else if (error.response?.data?.message) {
