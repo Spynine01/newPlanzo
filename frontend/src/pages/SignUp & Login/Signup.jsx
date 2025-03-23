@@ -53,22 +53,25 @@ export default function Signup() {
     
     setLoading(true);
     setError('');
-    
+  
+    // Set API endpoint dynamically based on role
+    const endpoint = formData.role === 'event_organizer' ? '/eventOrgRegister' : '/register';
+  
     try {
-      const response = await api.post('/register', {
+      const response = await api.post(endpoint, {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.password_confirmation,
+        role: formData.role,  // Send selected role
         preferences: formData.preferences
       });
-      
+  
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/events');
     } catch (error) {
       if (error.response?.data?.errors) {
-        // Handle validation errors from the backend
         const firstError = Object.values(error.response.data.errors)[0][0];
         setError(firstError);
       } else {
@@ -90,6 +93,7 @@ export default function Signup() {
                 {error}
               </div>
             )}
+
             <form onSubmit={handleSubmit}>
               <div className="input">
                 <input 
@@ -136,6 +140,23 @@ export default function Signup() {
                   disabled={loading}
                 />
               </div>
+
+              {/* Role Selection */}
+            <div className="input">
+              <select name="role" value={formData.role} onChange={handleChange} disabled={loading}>
+                <option value="user">User</option>
+                <option value="event_organizer">Event Organizer</option>
+              </select>
+            </div>
+
+            {/* Show PDF Upload only if Event Organizer is selected */}
+            {formData.role === 'event_organizer' && (
+              <div className="input">
+                <label>Upload Event Details (PDF)</label>
+                <input type="file" accept="application/pdf" onChange={handleFileChange} disabled={loading} />
+              </div>
+            )}
+            
               <div className="input">
                 <input 
                   type="submit" 
