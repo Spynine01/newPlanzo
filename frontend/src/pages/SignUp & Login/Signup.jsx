@@ -10,7 +10,7 @@ export default function Signup() {
     email: '',
     password: '',
     password_confirmation: '',
-    role: 'user', // ✅ Add default role to avoid "undefined"
+    role: 'user', // adds a default role, so that it will not be undefined and show the user options as default
     preferences: [], // no preference so that the form shows the error
     pdf: null, // For event organizer
   });
@@ -28,7 +28,7 @@ export default function Signup() {
   const handleFileChange = (e) => {
     setFormData({
       ...formData,
-      pdf: e.target.files[0] // ✅ Store file properly
+      pdf: e.target.files[0] // Store file properly
     });
   };
 

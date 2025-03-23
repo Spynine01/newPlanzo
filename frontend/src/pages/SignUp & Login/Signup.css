@@ -10,11 +10,11 @@
 body {
     display: flex;
     justify-content: center;
-    align-items: center; /* Change this */
+    align-items: center;
     min-height: 100vh;
-    background: #effeef;
+    width: 100vw;
+    background: rgba(255, 255, 255, 0.5); /* Apply the gray gradient */
 }
-
 /* Add margin to prevent overlap with navbar */
 .container {
     position: relative; /* Ensure it stays in place */
