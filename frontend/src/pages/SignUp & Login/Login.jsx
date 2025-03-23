@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import React from 'react'
-import './Login.css'
-import Signup from './Signup'
-
-
-export default function Login() {
-=======
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import './Login.css'
@@ -75,30 +67,10 @@ export default function Login() {
     }
   };
 
->>>>>>> e2989bcc5e6114891a28c1bb0c450081ebec68bf
   return (
     <div>
       <div className="container">
         <div className="drop">
-<<<<<<< HEAD
-            <div className="context">
-                <h2>Sign In</h2>
-                <form>
-                    <div className="input">
-                        <input type="text" name='username' placeholder='Username' />
-                    </div>
-                    <div className="input">
-                        <input type="password" name='password' placeholder='Password' />
-                    </div>
-                    <div className="input">
-                        <input type="submit" value='Login' href="#" />
-                    </div>
-                </form>
-            </div>
-        </div>
-        <a href="#" className="btn">Forget Password</a>
-        <a href="./Signup.jsx" className="btn signup">Sign Up</a>
-=======
           <div className="context">
             <h2>Sign In</h2>
             {error && (
@@ -141,7 +113,6 @@ export default function Login() {
         </div>
         <Link to="/forgot-password" className="btn">Forget Password</Link>
         <Link to="/register" className="btn signup">Sign Up</Link>
->>>>>>> e2989bcc5e6114891a28c1bb0c450081ebec68bf
       </div>
     </div>
   )
