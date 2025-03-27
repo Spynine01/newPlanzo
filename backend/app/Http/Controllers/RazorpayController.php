@@ -51,14 +51,15 @@ class RazorpayController extends Controller
             }
             
             $orderData = [
-                'amount' => $request->amount,
+                'amount' => $request->amount, // Amount is already in paise from frontend
                 'currency' => 'INR',
                 'receipt' => 'rcpt_' . time(),
                 'notes' => [
                     'type' => $request->type,
                     'user_id' => auth()->id(),
                     'event_id' => $request->event_id,
-                    'quantity' => $request->quantity
+                    'quantity' => $request->quantity,
+                    'amount_in_paise' => $request->amount // Store original amount for verification
                 ]
             ];
 
@@ -109,6 +110,13 @@ class RazorpayController extends Controller
         try {
             Log::info('Verifying payment: ' . json_encode($request->all()));
 
+            $request->validate([
+                'razorpay_signature' => 'required|string',
+                'razorpay_payment_id' => 'required|string',
+                'razorpay_order_id' => 'required|string',
+                'amount' => 'required|numeric'
+            ]);
+
             $attributes = [
                 'razorpay_signature' => $request->razorpay_signature,
                 'razorpay_payment_id' => $request->razorpay_payment_id,
@@ -121,23 +129,27 @@ class RazorpayController extends Controller
             $order = $this->razorpay->order->fetch($request->razorpay_order_id);
             $notes = $order->notes;
 
+            // Amount is in paise, convert to rupees for our calculations
+            $amountInRupees = $request->amount / 100;
+            
             // Store payment details based on type
             if ($notes['type'] === 'wallet') {
-                DB::transaction(function () use ($request, $notes) {
+                DB::transaction(function () use ($request, $notes, $amountInRupees) {
                     // Get user's wallet
                     $wallet = Wallet::where('user_id', auth()->id())->firstOrFail();
                     
                     // Calculate platform fee (5%)
-                    $platformFee = $request->amount * 0.05;
+                    $platformFee = $amountInRupees * 0.05;
                     
                     // Calculate coins (1 coin = 10 rupees)
-                    $coins = (int) (($request->amount - $platformFee) / 10);
+                    $baseAmount = $amountInRupees - $platformFee;
+                    $coins = (int) ($baseAmount / 10);
                     
                     // Create transaction
                     $transaction = Transaction::create([
                         'wallet_id' => $wallet->id,
                         'type' => 'credit',
-                        'amount' => $request->amount,
+                        'amount' => $amountInRupees,
                         'coins' => $coins,
                         'platform_fee' => $platformFee,
                         'status' => 'completed',
@@ -146,19 +158,25 @@ class RazorpayController extends Controller
                         'description' => 'Wallet Top Up'
                     ]);
 
-                    // Update wallet balance and coins
-                    $wallet->addCoins($coins, $request->amount - $platformFee, $platformFee);
+                    // Update wallet balance
+                    $wallet->coins += $coins;
+                    $wallet->total_spent += $amountInRupees;
+                    $wallet->save();
 
                     Log::info('Wallet updated successfully', [
                         'wallet_id' => $wallet->id,
-                        'new_balance' => $wallet->balance,
+                        'amount_in_rupees' => $amountInRupees,
+                        'platform_fee' => $platformFee,
+                        'base_amount' => $baseAmount,
+                        'coins_added' => $coins,
                         'new_coins' => $wallet->coins,
+                        'total_spent' => $wallet->total_spent,
                         'payment_id' => $request->razorpay_payment_id,
                         'transaction_id' => $transaction->id
                     ]);
                 });
             } else if ($notes['type'] === 'ticket') {
-                DB::transaction(function () use ($request, $notes) {
+                DB::transaction(function () use ($request, $notes, $amountInRupees) {
                     // Get the event
                     $event = Event::findOrFail($notes['event_id']);
                     
@@ -175,7 +193,7 @@ class RazorpayController extends Controller
                             'payment_id' => $request->razorpay_payment_id,
                             'order_id' => $request->razorpay_order_id,
                             'status' => 'confirmed',
-                            'price' => $request->amount / $notes['quantity']
+                            'price' => $amountInRupees / $notes['quantity']
                         ]);
                     }
 
@@ -195,7 +213,7 @@ class RazorpayController extends Controller
                 'success' => true,
                 'message' => 'Payment verified successfully',
                 'type' => $notes['type'],
-                'amount' => $request->amount
+                'amount' => $amountInRupees
             ]);
         } catch (\Exception $e) {
             Log::error('Payment verification failed: ' . $e->getMessage());

@@ -18,15 +18,14 @@ class Transaction extends Model
         'coins',
         'platform_fee',
         'status',
-        'details',
-        'payment_id',
-        'description'
+        'description',
+        'details'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'coins' => 'integer',
         'platform_fee' => 'decimal:2',
+        'coins' => 'integer',
         'details' => 'array'
     ];
 

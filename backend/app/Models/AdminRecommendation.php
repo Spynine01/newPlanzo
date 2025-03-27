@@ -12,21 +12,22 @@ class AdminRecommendation extends Model
 
     protected $fillable = [
         'event_id',
-        'transaction_id',
         'type',
         'recommendation',
         'status',
         'admin_notes'
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
+    ];
+
+    protected $with = ['event']; // Always load the event relationship
+
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class);
-    }
-
-    public function transaction(): BelongsTo
-    {
-        return $this->belongsTo(Transaction::class);
+        return $this->belongsTo(PendingEvent::class, 'event_id');
     }
 
     public function approve(): void

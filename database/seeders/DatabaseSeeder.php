@@ -8,13 +8,12 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         $this->call([
-            AdminUserSeeder::class
+            AdminSeeder::class,
+            // Add other seeders here if you have any
         ]);
     }
-}
+} 

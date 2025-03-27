@@ -27,8 +27,11 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            // Only redirect to login if not already on login page
+            if (!window.location.pathname.includes('/login')) {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }
@@ -63,7 +66,62 @@ export const eventApi = {
     },
 
     // Delete an event
-    deleteEvent: (id) => api.delete(`/events/${id}`)
+    deleteEvent: (id) => api.delete(`/events/${id}`),
+
+    createPendingEvent: async (eventData) => {
+        const formData = new FormData();
+        
+        // Add all fields to FormData
+        Object.keys(eventData).forEach(key => {
+            if (key === 'image' && eventData[key] instanceof File) {
+                formData.append(key, eventData[key]);
+            } else if (eventData[key] !== null && eventData[key] !== undefined && eventData[key] !== '') {
+                // Convert numeric fields to numbers
+                if (key === 'price' || key === 'available_tickets') {
+                    formData.append(key, Number(eventData[key]));
+                } else {
+                    formData.append(key, eventData[key]);
+                }
+            }
+        });
+
+        formData.append('status', 'pending');
+        
+        const response = await api.post('/pending-events', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    },
+
+    getPendingEvent: async (id) => {
+        const response = await api.get(`/pending-events/${id}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    },
+
+    updatePendingEvent: async (id, eventData) => {
+        const response = await api.put(`/pending-events/${id}`, eventData, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    },
+
+    finalizePendingEvent: async (id, eventData) => {
+        const response = await api.post(`/pending-events/${id}/finalize`, eventData, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    }
 };
 
 export const walletApi = {
@@ -85,11 +143,57 @@ export const walletApi = {
 
 export const adminApi = {
     // Get pending recommendations
-    getRecommendations: () => api.get('/admin/recommendations'),
+    getRecommendations: async () => {
+        const response = await api.get('/admin/recommendations', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Cache-Control': 'no-cache'
+            }
+        });
+        return response;
+    },
 
     // Respond to a recommendation
-    respondToRecommendation: (id, response) => 
-        api.post(`/admin/recommendations/${id}/respond`, { response })
+    respondToRecommendation: async (recommendationId, data) => {
+        const response = await api.put(`/admin/recommendations/${recommendationId}`, data, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    },
+
+    updateEvent: (eventId, data) => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return Promise.reject(new Error('No authentication token found'));
+        }
+        
+        return api.put(`/events/${eventId}`, data, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+    },
+
+    updatePendingEvent: async (eventId, eventData) => {
+        const response = await api.put(`/admin/pending-events/${eventId}`, eventData, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    },
+
+    finalizePendingEvent: async (eventId) => {
+        const response = await api.post(`/admin/pending-events/${eventId}/finalize`, {}, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response;
+    }
 };
 
 export default api; 

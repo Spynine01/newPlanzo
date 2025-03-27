@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { eventApi } from '../services/api';
 import api from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const AddEvent = () => {
   const navigate = useNavigate();
@@ -26,10 +27,52 @@ const AddEvent = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const [pendingEventId, setPendingEventId] = useState(null);
+  const [pendingRecommendations, setPendingRecommendations] = useState([]);
+  const [allRecommendationsApproved, setAllRecommendationsApproved] = useState(false);
 
   useEffect(() => {
     fetchWalletData();
   }, []);
+
+  useEffect(() => {
+    if (pendingEventId) {
+      const checkRecommendations = async () => {
+        try {
+          const response = await api.get(`/pending-events/${pendingEventId}/recommendations`);
+          const pendingRecs = response.data.filter(rec => rec.status === 'pending');
+          const approvedRecs = response.data.filter(rec => rec.status === 'approved');
+          
+          setPendingRecommendations(pendingRecs.map(rec => rec.type));
+          
+          // Update form with approved recommendations
+          if (approvedRecs.length > 0) {
+            const newFormData = { ...formData };
+            approvedRecs.forEach(rec => {
+              if (rec.type && rec.recommendation) {
+                newFormData[rec.type] = rec.recommendation;
+              }
+            });
+            setFormData(newFormData);
+          }
+
+          // Check if all requested recommendations are approved
+          const allApproved = pendingRecs.length === 0 && approvedRecs.length > 0;
+          setAllRecommendationsApproved(allApproved);
+
+          // If all recommendations are approved, finalize the event
+          if (allApproved) {
+            await finalizeEvent();
+          }
+        } catch (error) {
+          console.error('Error checking recommendations:', error);
+        }
+      };
+
+      const interval = setInterval(checkRecommendations, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [pendingEventId, formData]);
 
   const fetchWalletData = async () => {
     try {
@@ -65,124 +108,106 @@ const AddEvent = () => {
   };
 
   const handleRequestRecommendation = async (type) => {
-    if (!wallet || wallet.coins < 10) {
-      alert('Insufficient coins. Please top up your wallet.');
-      return;
-    }
-
     setRecommendationLoading(true);
     try {
-      // First create the event if it doesn't exist
-      let eventId;
-      if (!formData.id) {
-        const eventResponse = await eventApi.createEvent(formDataToSend);
-        eventId = eventResponse.data.event.id;
-      }
-
+      // Request recommendation without creating event first
       const response = await api.post('/wallet/request-recommendation', {
-        event_id: eventId || formData.id,
-        type,
-        coins: 10
+        type: type
       });
 
-      setWallet(prev => ({
-        ...prev,
-        coins: response.data.new_balance
-      }));
-
-      alert(`Recommendation request submitted successfully! Our experts will review your ${type} and provide guidance soon.`);
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to request recommendation');
-    } finally {
-      setRecommendationLoading(false);
+      if (response.status === 200) {
+        toast.success(`${type} recommendation requested successfully`);
+        setWallet(prevData => ({
+          ...prevData,
+          coins: response.data.balance
+        }));
+        setPendingEventId(response.data.pending_event_id);
+        setPendingRecommendations(prev => [...prev, type]);
+      }
+    } catch (error) {
+      console.error('Error requesting recommendation:', error);
+      toast.error(error.response?.data?.message || 'Error requesting recommendation');
     }
+    setRecommendationLoading(false);
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name) newErrors.name = 'Event name is required';
-    if (!formData.description) newErrors.description = 'Description is required';
-    if (!formData.category) newErrors.category = 'Category is required';
-    if (!formData.date) newErrors.date = 'Date is required';
-    if (!formData.time) newErrors.time = 'Time is required';
-    if (!formData.location) newErrors.location = 'Location is required';
-    if (!formData.venue) newErrors.venue = 'Venue is required';
-    if (!formData.address) newErrors.address = 'Address is required';
-    if (!formData.price) newErrors.price = 'Price is required';
-    if (!formData.available_tickets) newErrors.available_tickets = 'Available tickets is required';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const finalizeEvent = async () => {
+    try {
+      const response = await eventApi.finalizePendingEvent(pendingEventId, formData);
+      if (response.status === 200) {
+        toast.success('Event created successfully with all recommendations!');
+        navigate('/events');
+      }
+    } catch (error) {
+      console.error('Error finalizing event:', error);
+      toast.error(error.response?.data?.message || 'Error finalizing event');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
-      
-      const numericPrice = parseFloat(formData.price);
-      const numericTickets = parseInt(formData.available_tickets, 10);
+      // Create a copy of formData and remove empty values
+      const submitData = { ...formData };
+      Object.keys(submitData).forEach(key => {
+        if (submitData[key] === '' || submitData[key] === null || submitData[key] === undefined) {
+          delete submitData[key];
+        }
+      });
 
-      if (isNaN(numericPrice) || numericPrice < 0) {
-        setErrors(prev => ({ ...prev, price: 'Please enter a valid price' }));
-        return;
-      }
-
-      if (isNaN(numericTickets) || numericTickets < 0) {
-        setErrors(prev => ({ ...prev, available_tickets: 'Please enter a valid number of tickets' }));
-        return;
-      }
-
-      formDataToSend.append('name', formData.name.trim());
-      formDataToSend.append('description', formData.description.trim());
-      formDataToSend.append('category', formData.category.trim());
-      formDataToSend.append('date', formData.date);
-      formDataToSend.append('time', formData.time);
-      formDataToSend.append('location', formData.location.trim());
-      formDataToSend.append('venue', formData.venue.trim());
-      formDataToSend.append('address', formData.address.trim());
-      formDataToSend.append('price', numericPrice);
-      formDataToSend.append('available_tickets', numericTickets);
-      
-      if (formData.image) {
-        formDataToSend.append('image', formData.image);
-      }
-
-      const response = await eventApi.createEvent(formDataToSend);
-      alert('Event created successfully!');
-      navigate('/events');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      if (error.response?.data?.errors) {
-        const serverErrors = error.response.data.errors;
-        const newErrors = {};
-        Object.keys(serverErrors).forEach(key => {
-          newErrors[key] = Array.isArray(serverErrors[key]) 
-            ? serverErrors[key][0] 
-            : serverErrors[key];
-        });
-        setErrors(newErrors);
-        
-        const errorMessages = Object.values(serverErrors)
-          .map(err => Array.isArray(err) ? err[0] : err)
-          .join('\n');
-        alert('Validation errors:\n' + errorMessages);
+      let response;
+      if (pendingEventId) {
+        // Update existing pending event
+        response = await eventApi.updatePendingEvent(pendingEventId, submitData);
       } else {
-        const errorMessage = error.response?.data?.message 
-          || error.response?.data?.error 
-          || error.message 
-          || 'Failed to create event. Please try again.';
-        alert(`Error: ${errorMessage}`);
+        // Create new pending event
+        response = await eventApi.createPendingEvent(submitData);
+        setPendingEventId(response.data.pending_event.id);
       }
-    } finally {
-      setLoading(false);
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('Event saved successfully');
+        
+        // If all required fields are filled and no pending recommendations, finalize the event
+        if (validateForm() && pendingRecommendations.length === 0) {
+          await eventApi.finalizePendingEvent(response.data.pending_event.id, submitData);
+          toast.success('Event created and published!');
+          navigate('/events');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error(error.response?.data?.message || 'Error saving event');
     }
+    setLoading(false);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = {
+      name: 'Event name',
+      description: 'Description',
+      category: 'Category',
+      date: 'Date',
+      time: 'Time',
+      location: 'Location',
+      venue: 'Venue',
+      address: 'Address',
+      price: 'Price',
+      available_tickets: 'Available tickets'
+    };
+
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!formData[field]) {
+        newErrors[field] = `${label} is required`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const categories = [
@@ -195,6 +220,10 @@ const AddEvent = () => {
     'Education',
     'Other'
   ];
+
+  const isRecommendationPending = (type) => {
+    return pendingRecommendations.includes(type);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -242,30 +271,19 @@ const AddEvent = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Category</label>
-                <div className="flex gap-2">
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className={`flex-1 mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                      errors.category ? 'border-red-500' : ''
-                    }`}
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleRequestRecommendation('category')}
-                    disabled={recommendationLoading || !wallet || wallet.coins < 10}
-                    className="mt-1"
-                  >
-                    Get Recommendation (10 coins)
-                  </Button>
-                </div>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className={`w-full mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                    errors.category ? 'border-red-500' : ''
+                  }`}
+                >
+                  <option value="">Select a category</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
                 {errors.category && (
                   <p className="mt-1 text-sm text-red-500">{errors.category}</p>
                 )}
@@ -305,28 +323,40 @@ const AddEvent = () => {
                     onChange={handleChange}
                     error={errors.location}
                     placeholder="Enter city or region"
+                    className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleRequestRecommendation('location')}
-                    disabled={recommendationLoading || !wallet || wallet.coins < 10}
+                    disabled={loading || recommendationLoading || isRecommendationPending('location') || !wallet || wallet.coins < 10}
                   >
-                    Get Recommendation (10 coins)
+                    {isRecommendationPending('location') ? 'Waiting for approval...' : 'Request Location Recommendation (10 coins)'}
                   </Button>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Venue</label>
-                <Input
-                  type="text"
-                  name="venue"
-                  value={formData.venue}
-                  onChange={handleChange}
-                  error={errors.venue}
-                  placeholder="Enter venue name"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    name="venue"
+                    value={formData.venue}
+                    onChange={handleChange}
+                    error={errors.venue}
+                    placeholder="Enter venue name"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleRequestRecommendation('venue')}
+                    disabled={loading || recommendationLoading || isRecommendationPending('venue') || !wallet || wallet.coins < 10}
+                  >
+                    {isRecommendationPending('venue') ? 'Waiting for approval...' : 'Request Venue Recommendation (10 coins)'}
+                  </Button>
+                </div>
               </div>
 
               <div>
@@ -344,40 +374,41 @@ const AddEvent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Price</label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      error={errors.price}
-                      placeholder="Enter ticket price"
-                      min="0"
-                      step="0.01"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleRequestRecommendation('pricing')}
-                      disabled={recommendationLoading || !wallet || wallet.coins < 10}
-                    >
-                      Get Recommendation (10 coins)
-                    </Button>
-                  </div>
+                  <Input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    error={errors.price}
+                    placeholder="Enter ticket price"
+                    min="0"
+                    step="0.01"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Available Tickets</label>
-                  <Input
-                    type="number"
-                    name="available_tickets"
-                    value={formData.available_tickets}
-                    onChange={handleChange}
-                    error={errors.available_tickets}
-                    placeholder="Enter number of tickets"
-                    min="0"
-                    step="1"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      name="available_tickets"
+                      value={formData.available_tickets}
+                      onChange={handleChange}
+                      error={errors.available_tickets}
+                      placeholder="Enter number of tickets"
+                      min="0"
+                      step="1"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleRequestRecommendation('tickets')}
+                      disabled={loading || recommendationLoading || isRecommendationPending('tickets') || !wallet || wallet.coins < 10}
+                    >
+                      {isRecommendationPending('tickets') ? 'Waiting for approval...' : 'Request Tickets Recommendation (10 coins)'}
+                    </Button>
+                  </div>
                 </div>
               </div>
 

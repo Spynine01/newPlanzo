@@ -71,31 +71,32 @@ const RazorpayPayment = ({ amount = 500, onSuccess, onFailure, type = 'wallet', 
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
-              amount: amount / 100, // Convert back to rupees for verification
-              type,
+              amount: orderResponse.data.amount, // Use the original amount from order
+              type: type,
               ...(type === 'ticket' && {
                 event_id,
                 quantity
               })
             };
 
+            console.log('Verifying payment with data:', verificationData);
             const verificationResponse = await walletApi.verifyPayment(verificationData);
 
             if (verificationResponse.data.success) {
               onSuccess({
                 ...verificationResponse.data,
                 type,
-                amount: amount / 100
+                amount: orderResponse.data.amount / 100
               });
             } else {
-              onFailure(verificationResponse.data.message || 'Payment verification failed');
+              throw new Error(verificationResponse.data.message || 'Payment verification failed');
             }
           } catch (error) {
             console.error('Payment verification error:', error);
-            onFailure(error.response?.data?.message || 'Payment verification failed');
+            onFailure(error.response?.data?.message || error.message || 'Payment verification failed');
           }
         },
-        prefill: {
+        prefill: orderResponse.data.prefill || {
           name: localStorage.getItem('userName') || 'User',
           email: localStorage.getItem('userEmail') || 'user@example.com',
           contact: ''
@@ -112,12 +113,13 @@ const RazorpayPayment = ({ amount = 500, onSuccess, onFailure, type = 'wallet', 
 
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', function (response) {
+        console.error('Payment failed:', response.error);
         onFailure(response.error.description || 'Payment failed');
       });
       razorpay.open();
     } catch (error) {
       console.error('Payment initialization error:', error);
-      onFailure(error.message || 'Failed to initialize payment');
+      onFailure(error.response?.data?.message || error.message || 'Failed to initialize payment');
     }
   };
 

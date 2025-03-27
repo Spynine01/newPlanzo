@@ -13,13 +13,13 @@ class Wallet extends Model
 
     protected $fillable = [
         'user_id',
-        'balance',
-        'coins'
+        'coins',
+        'total_spent'
     ];
 
     protected $casts = [
-        'balance' => 'decimal:2',
-        'coins' => 'integer'
+        'coins' => 'integer',
+        'total_spent' => 'decimal:2'
     ];
 
     public function user(): BelongsTo
@@ -32,20 +32,26 @@ class Wallet extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    public function addCoins(int $coins, float $amount, float $platformFee = 0): void
+    public function addCoins(int $coins, float $amount = 0, float $platformFee = 0): void
     {
-        $this->balance += $amount;
         $this->coins += $coins;
+        $this->total_spent += $amount + $platformFee;
         $this->save();
     }
 
     public function deductCoins(int $coins): bool
     {
-        if ($this->coins >= $coins) {
-            $this->coins -= $coins;
-            $this->save();
-            return true;
+        if ($this->coins < $coins) {
+            return false;
         }
-        return false;
+
+        $this->coins -= $coins;
+        $this->save();
+        return true;
+    }
+
+    public function hasEnoughCoins(int $coins): bool
+    {
+        return $this->coins >= $coins;
     }
 }

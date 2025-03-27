@@ -149,7 +149,7 @@ const Wallet = () => {
                 {wallet.coins} coins
               </div>
               <div className="mt-2 text-sm text-gray-600">
-                Balance: {formatAmount(wallet.balance)}
+                Total Spent: {formatAmount(wallet.total_spent || 0)}
               </div>
             </CardContent>
           </Card>

@@ -39,28 +39,30 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-  
+    
     setLoading(true);
     setError('');
-  
+    
     try {
       const response = await api.post('/login', {
         email: formData.email,
         password: formData.password
       });
-  
+      
+      // Store token and user data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-  
-      if (response.data.user.role === 'event_organizer') {
-        navigate('/event-dashboard');
+      
+      // Check if user is admin
+      if (response.data.user.role === 'admin') {
+        localStorage.setItem('user_role', 'admin');
+        navigate('/admin'); // Redirect admin to dashboard
       } else {
-        navigate('/events');
+        navigate('/events'); // Redirect regular users to events page
       }
     } catch (error) {
-      if (error.response?.status === 403) {
-        setError('Your account is pending verification. Please wait for approval.');
-      } else if (error.response?.data?.errors) {
+      if (error.response?.data?.errors) {
+        // Handle validation errors from the backend
         const firstError = Object.values(error.response.data.errors)[0][0];
         setError(firstError);
       } else if (error.response?.data?.message) {

@@ -13,6 +13,8 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\RazorpayController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\PendingEventController;
+use App\Http\Controllers\Admin\PendingEventController as AdminPendingEventController;
 
 
 /*
@@ -35,7 +37,6 @@ Route::get('/test', function () {
 });
 
 Route::post('/login', [LoginController::class, 'login']);
-
 Route::post('/register', [RegisterController::class, 'register']);
 
 Route::post('/superadmin', [SuperAdminController::class, 'login']);
@@ -44,7 +45,7 @@ Route::post('/userlogin', [MainUserController::class, 'login']);
 
 Route::post('/eventorg', [EventOrganisorArppoveController::class, 'login']);
 
-Route::post('/eventOrgRegister', [RegisterController::class, 'register']);
+Route::post('/eventOrgRegister', [EventOrganisorPendingController::class, 'store']);
 
 Route::get('/eventOrgFetch', [EventOrganisorPendingController::class, 'index']);
 
@@ -87,4 +88,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment routes
     Route::post('/create-order', [RazorpayController::class, 'createOrder']);
     Route::post('/verify-payment', [RazorpayController::class, 'verifyPayment']);
+
+    // Pending Events Routes
+    Route::post('/pending-events', [PendingEventController::class, 'store']);
+    Route::get('/pending-events/{pendingEvent}', [PendingEventController::class, 'show']);
+    Route::put('/pending-events/{pendingEvent}', [PendingEventController::class, 'update']);
+    Route::get('/pending-events/{pendingEvent}/recommendations', [PendingEventController::class, 'recommendations']);
+    Route::post('/pending-events/{pendingEvent}/finalize', [PendingEventController::class, 'finalize']);
+});
+
+// Admin Routes
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::put('/pending-events/{pendingEvent}', [AdminPendingEventController::class, 'update']);
+    Route::post('/pending-events/{pendingEvent}/finalize', [AdminPendingEventController::class, 'finalize']);
 });

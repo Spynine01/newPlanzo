@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Events from './pages/Events';
 import AddEvent from './pages/AddEvent';
 import EventDetails from './pages/EventDetails';
@@ -24,6 +25,7 @@ const App = () => {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex">
+        <Toaster position="top-right" />
         {/* Sidebar */}
         <Sidebar />
 

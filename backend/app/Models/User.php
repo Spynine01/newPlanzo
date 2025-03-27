@@ -22,7 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'preferences'
+        'preferences',
+        'role'
     ];
 
     /**
@@ -43,6 +44,10 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'preferences' => 'array'
+    ];
+
+    protected $attributes = [
+        'role' => 'user' // Default role for new users
     ];
 
     public function wallet(): HasOne
