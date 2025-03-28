@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaBars } from "react-icons/fa"
 import {
     FaCommentAlt,
@@ -6,46 +6,123 @@ import {
     FaTh,
     FaThList,
     FaUserAlt,
+    FaUsers,
+    FaBriefcase,
+    FaClipboardList,
+    FaCog,
+    FaCreditCard,
+    FaSignOutAlt
 } from "react-icons/fa"
-import { MdEvent } from 'react-icons/md';
-import { NavLink } from 'react-router-dom'
+import { MdEvent, MdDashboard, MdAdminPanelSettings } from 'react-icons/md';
+import { NavLink, useNavigate } from 'react-router-dom'
 
 export const Sidebar = () => {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userRole, setUserRole] = useState('');
+    
     const toggle = () => setIsOpen(!isOpen);
-
-    const menuItems = [
-        {
-            path:"/dashboard",
-            name:"Dashboard",
-            icon:<FaTh/>
-        },
-        {
-            path:"/about",
-            name:"About",
-            icon:<FaUserAlt/>
-        },
-        {
-            path:"/analytics",
-            name:"Analytics",
-            icon:<FaRegChartBar/>
-        },
-        {
-            path:"/comments",
-            name:"Comments",
-            icon:<FaCommentAlt/>
-        },
+    
+    useEffect(() => {
+        // Check auth status and role on component mount
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('userRole');
+        
+        setIsAuthenticated(!!token);
+        setUserRole(role || '');
+    }, []);
+    
+    // Common menu items for all users
+    const commonMenuItems = [
         {
             path:"/events",
             name:"Events",
-            icon:<MdEvent/>
+            icon:<MdEvent/>,
+            visible: true
         },
         {
-            path:"/products",
-            name:"Products",
-            icon:<FaThList/>
+            path:"/wallet",
+            name:"Wallet",
+            icon:<FaCreditCard/>,
+            visible: isAuthenticated
+        },
+        {
+            path:"/profile",
+            name:"Profile",
+            icon:<FaUserAlt/>,
+            visible: isAuthenticated
         }
-    ]
+    ];
+    
+    // Admin-only menu items
+    const adminMenuItems = [
+        {
+            path:"/admin",
+            name:"Admin Dashboard",
+            icon:<MdAdminPanelSettings/>,
+            visible: userRole === 'admin'
+        },
+        {
+            path:"/dashboard",
+            name:"Analytics",
+            icon:<MdDashboard/>,
+            visible: userRole === 'admin'
+        },
+        {
+            path:"/users",
+            name:"Users",
+            icon:<FaUsers/>,
+            visible: userRole === 'admin'
+        },
+        {
+            path:"/recommendations",
+            name:"Recommendations",
+            icon:<FaClipboardList/>,
+            visible: userRole === 'admin'
+        },
+        {
+            path:"/settings",
+            name:"Settings",
+            icon:<FaCog/>,
+            visible: userRole === 'admin'
+        }
+    ];
+    
+    // Event organizer specific items
+    const organizerMenuItems = [
+        {
+            path:"/events/add",
+            name:"Create Event",
+            icon:<MdEvent/>,
+            visible: userRole === 'organizer'
+        },
+        {
+            path:"/my-events",
+            name:"My Events",
+            icon:<FaBriefcase/>,
+            visible: userRole === 'organizer'
+        },
+        {
+            path:"/analytics",
+            name:"Sales Analytics",
+            icon:<FaRegChartBar/>,
+            visible: userRole === 'organizer'
+        }
+    ];
+    
+    // Combine all menu items and filter based on visibility
+    const allMenuItems = [...commonMenuItems, ...adminMenuItems, ...organizerMenuItems]
+        .filter(item => item.visible);
+    
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
+        navigate('/login');
+        window.location.reload();
+    };
 
     return (
         <div className="sidebar-container">
@@ -57,7 +134,7 @@ export const Sidebar = () => {
                     </div>
                 </div>
                 {
-                    menuItems.map((item, index) => (
+                    allMenuItems.map((item, index) => (
                         <NavLink 
                             to={item.path} 
                             key={index} 
@@ -68,6 +145,17 @@ export const Sidebar = () => {
                         </NavLink>
                     ))
                 }
+                
+                {isAuthenticated && (
+                    <div 
+                        className="link" 
+                        onClick={handleLogout}
+                        style={{cursor: 'pointer'}}
+                    >
+                        <div className="icon"><FaSignOutAlt/></div>
+                        <div style={{display: isOpen ? "block" : "none"}} className="link_text">Logout</div>
+                    </div>
+                )}
             </div>
         </div>
     )

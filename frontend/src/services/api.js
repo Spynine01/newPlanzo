@@ -30,6 +30,12 @@ api.interceptors.response.use(
             localStorage.removeItem('token');
             window.location.href = '/login';
         }
+        // Handle organizer pending approval
+        if (error.response && error.response.status === 403 && 
+            error.response.data && error.response.data.message &&
+            error.response.data.message.includes('pending')) {
+            // We'll let the components handle this specific error with their own UI
+        }
         return Promise.reject(error);
     }
 );

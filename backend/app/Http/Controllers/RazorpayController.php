@@ -180,13 +180,13 @@ class RazorpayController extends Controller
                     }
 
                     // Update available tickets
-                    $event->available_tickets -= $notes['quantity'];
-                    $event->save();
+                    $event->decrement('available_tickets', $notes['quantity']);
 
                     Log::info('Tickets created successfully', [
                         'event_id' => $notes['event_id'],
                         'quantity' => $notes['quantity'],
-                        'payment_id' => $request->razorpay_payment_id
+                        'payment_id' => $request->razorpay_payment_id,
+                        'remaining_tickets' => $event->available_tickets
                     ]);
                 });
             }

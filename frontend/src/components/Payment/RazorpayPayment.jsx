@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { walletApi } from '../../services/api';
 
-const RazorpayPayment = ({ amount = 500, onSuccess, onFailure, type = 'wallet', event_id, quantity = 1 }) => {
+const RazorpayPayment = ({ amount = 500, onSuccess, onFailure, type = 'wallet', eventId, quantity = 1 }) => {
   useEffect(() => {
     const loadRazorpay = async () => {
       const script = document.createElement('script');
@@ -42,11 +42,9 @@ const RazorpayPayment = ({ amount = 500, onSuccess, onFailure, type = 'wallet', 
         amount: amount, // Already in paise
         currency: 'INR',
         receipt: `receipt_${Date.now()}`,
-        type,
-        ...(type === 'ticket' && {
-          event_id,
-          quantity
-        })
+        type: type || 'ticket',
+        event_id: eventId,
+        quantity
       };
 
       console.log('Creating order with data:', orderData);
@@ -72,22 +70,23 @@ const RazorpayPayment = ({ amount = 500, onSuccess, onFailure, type = 'wallet', 
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
               amount: amount / 100, // Convert back to rupees for verification
-              type,
-              ...(type === 'ticket' && {
-                event_id,
-                quantity
-              })
+              type: type || 'ticket',
+              event_id: eventId,
+              quantity
             };
 
+            console.log('Verifying payment with data:', verificationData);
             const verificationResponse = await walletApi.verifyPayment(verificationData);
 
             if (verificationResponse.data.success) {
+              console.log('Payment verification successful:', verificationResponse.data);
               onSuccess({
                 ...verificationResponse.data,
                 type,
                 amount: amount / 100
               });
             } else {
+              console.error('Payment verification failed:', verificationResponse.data);
               onFailure(verificationResponse.data.message || 'Payment verification failed');
             }
           } catch (error) {

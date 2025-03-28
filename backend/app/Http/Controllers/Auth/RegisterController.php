@@ -41,20 +41,36 @@ class RegisterController extends Controller
                     $pdfPath = $request->file('pdf')->store('event_org_pdfs', 'public');
                 }
 
-                // Store in event_org_pending
+                // Create in User table with is_organizer_pending flag
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'preferences' => $request->preferences ? json_encode($request->preferences) : null,
+                    'is_organizer_pending' => true
+                ]);
+                
+                // Create wallet for user
+                Wallet::create([
+                    'user_id' => $user->id,
+                    'balance' => 0,
+                    'coins' => 0
+                ]);
+
+                // Store in event_org table with isVerified=false
                 $eventOrg = EventOrg::create([
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
                     'pdf_path' => $pdfPath ?? null,
-                    'preferences' => json_encode($request->preferences),
                     'isVerified' => false
                 ]);
 
                 DB::commit();
                 return response()->json([
-                    'message' => 'Registration pending approval',
-                    'event_organizer' => $eventOrg
+                    'message' => 'Your organizer account is pending approval. An administrator will review your application soon.',
+                    'event_organizer' => $eventOrg,
+                    'status' => 'pending_approval'
                 ], 201);
             } else {
                 // Normal User Registration

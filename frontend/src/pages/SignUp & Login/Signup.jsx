@@ -85,7 +85,6 @@ export default function Signup() {
     setLoading(true);
     setError(''); 
 
-
     const endpoint = formData.role === 'event_organizer' ? '/eventOrgRegister' : '/register';
     const formDataToSend = new FormData();
 
@@ -107,6 +106,17 @@ export default function Signup() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
+      // For organizer, show approval message and redirect to login
+      if (formData.role === 'event_organizer') {
+        navigate('/login', { 
+          state: { 
+            message: response.data.message || 'Your organizer account registration is successful! Please wait for admin approval before logging in.' 
+          } 
+        });
+        return;
+      }
+
+      // For regular users, proceed with login
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/events');

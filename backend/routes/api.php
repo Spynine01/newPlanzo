@@ -13,6 +13,8 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\RazorpayController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
 
 
 /*
@@ -72,6 +74,12 @@ Route::get('events/{event}', [EventController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
     
+    // User profile routes
+    Route::get('/user', [UserController::class, 'show']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::put('/user/password', [UserController::class, 'updatePassword']);
+    Route::put('/user/preferences', [UserController::class, 'updatePreferences']);
+    
     // Wallet routes
     Route::get('/wallet', [WalletController::class, 'getWallet']);
     Route::get('/wallet/transactions', [WalletController::class, 'getTransactions']);
@@ -83,6 +91,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/recommendations', [AdminRecommendationController::class, 'store']);
     Route::put('/admin/recommendations/{recommendation}', [AdminRecommendationController::class, 'update']);
     Route::get('/events/{event}/recommendations', [AdminRecommendationController::class, 'getEventRecommendations']);
+
+    // Admin dashboard routes
+    Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+        Route::get('/stats', [AdminController::class, 'getStats']);
+        Route::get('/users', [AdminController::class, 'getUsers']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+        Route::get('/events', [AdminController::class, 'getEvents']);
+        Route::delete('/events/{event}', [AdminController::class, 'deleteEvent']);
+        Route::get('/organizers/pending', [AdminController::class, 'getPendingOrganizers']);
+        Route::put('/organizers/{id}/approve', [AdminController::class, 'approveOrganizer']);
+        Route::delete('/organizers/{id}', [AdminController::class, 'rejectOrganizer']);
+    });
 
     // Payment routes
     Route::post('/create-order', [RazorpayController::class, 'createOrder']);

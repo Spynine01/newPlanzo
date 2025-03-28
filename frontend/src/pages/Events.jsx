@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
@@ -40,8 +40,16 @@ const Events = () => {
     location: '',
     dateRange: 'all'
   });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('userRole');
+    setIsLoggedIn(!!token);
+    setUserRole(role);
+    
     fetchEvents();
   }, [filters]);
 
@@ -103,7 +111,9 @@ const Events = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Upcoming Events</h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">Upcoming Events</h1>
+          </div>
           
           {/* Search and Filters Section */}
           <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
@@ -162,7 +172,12 @@ const Events = () => {
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map(event => (
-            <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300">
+            <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300 relative">
+              {event.available_tickets === 0 && (
+                <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+                  Sold Out
+                </div>
+              )}
               <div className="aspect-w-16 aspect-h-9">
                 <img
                   src={event.image_url ? `http://127.0.0.1:8000${event.image_url}` : DEFAULT_IMAGE}
@@ -212,12 +227,17 @@ const Events = () => {
                 >
                   View Details
                 </Button>
-                <Button
-                  variant="primary"
-                  className="flex-1"
-                >
-                  Purchase Ticket
-                </Button>
+                
+                {/* Show Purchase Ticket button only for logged-in users and if tickets are available */}
+                {isLoggedIn && event.available_tickets > 0 ? (
+                  <Button
+                    variant="primary"
+                    className="flex-1"
+                    onClick={() => handleViewDetails(event.id)}
+                  >
+                    Purchase Ticket
+                  </Button>
+                ) : null}
               </CardFooter>
             </Card>
           ))}

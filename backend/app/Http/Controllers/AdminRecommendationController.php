@@ -6,6 +6,7 @@ use App\Models\AdminRecommendation;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminRecommendationController extends Controller
 {
@@ -89,11 +90,16 @@ class AdminRecommendationController extends Controller
 
     public function getEventRecommendations(Event $event)
     {
-        $recommendations = $event->adminRecommendations()
-            ->with('transaction')
-            ->latest()
-            ->get();
+        try {
+            $recommendations = $event->adminRecommendations()
+                ->with('transaction')
+                ->latest()
+                ->get();
 
-        return response()->json($recommendations);
+            return response()->json($recommendations);
+        } catch (\Exception $e) {
+            Log::error('Error fetching event recommendations: ' . $e->getMessage());
+            return response()->json([]);
+        }
     }
 }

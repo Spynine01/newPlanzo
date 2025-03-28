@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\AdminRecommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -237,6 +238,24 @@ class EventController extends Controller
         } catch (\Exception $e) {
             Log::error('Error deleting event: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to delete event'], 500);
+        }
+    }
+
+    /**
+     * Get event recommendations
+     */
+    public function getRecommendations(Event $event)
+    {
+        try {
+            $recommendations = AdminRecommendation::where('event_id', $event->id)
+                ->where('status', 'approved')
+                ->get();
+
+            // Return empty array if no recommendations found
+            return response()->json($recommendations);
+        } catch (\Exception $e) {
+            Log::error('Error fetching event recommendations: ' . $e->getMessage());
+            return response()->json([], 200); // Return empty array instead of error
         }
     }
 } 

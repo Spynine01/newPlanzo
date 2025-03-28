@@ -29,10 +29,14 @@ const EventDetails = () => {
         if (token) {
           try {
             const recommendationsResponse = await eventApi.getEventRecommendations(id);
-            setRecommendations(recommendationsResponse.data);
+            if (Array.isArray(recommendationsResponse.data)) {
+              setRecommendations(recommendationsResponse.data);
+            } else {
+              setRecommendations([]);
+            }
           } catch (recError) {
             console.error('Error fetching recommendations:', recError);
-            // Don't set error state for recommendations failure
+            setRecommendations([]); // Set empty array on error
           }
         }
       } catch (error) {
@@ -62,13 +66,17 @@ const EventDetails = () => {
   const handlePaymentSuccess = async (response) => {
     console.log('Payment successful:', response);
     try {
-      // Refresh event details
-      const eventResponse = await eventApi.getEvent(id);
-      setEvent(eventResponse.data);
-      
-      // Show success message
+      // Show success message first
       setError(null);
       alert('Ticket purchased successfully! Check your email for details.');
+      
+      // Refresh event details
+      const eventResponse = await eventApi.getEvent(id);
+      console.log('Refreshed event details:', eventResponse.data);
+      setEvent(eventResponse.data);
+      
+      // Reset ticket quantity
+      setTicketQuantity(1);
     } catch (error) {
       console.error('Error refreshing event details:', error);
       setError('Payment was successful but failed to refresh event details. Please reload the page.');
@@ -210,18 +218,18 @@ const EventDetails = () => {
                               <div className="flex items-start">
                                 <div className="flex-shrink-0">
                                   {rec.type === 'category' && (
-                                    <svg className="h-6 w-6 text-blue-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
                                   )}
                                   {rec.type === 'location' && (
-                                    <svg className="h-6 w-6 text-blue-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                   )}
                                   {rec.type === 'pricing' && (
-                                    <svg className="h-6 w-6 text-blue-600" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                   )}
@@ -248,67 +256,53 @@ const EventDetails = () => {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900">₹{event.price.toLocaleString('en-IN')}</h3>
-                    <p className="text-sm text-gray-500">per ticket</p>
+                    {event.available_tickets === 0 ? (
+                      <div className="mt-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <p className="text-red-700 font-medium">This event is sold out</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-gray-500">
+                        {event.available_tickets} tickets available
+                      </p>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Number of Tickets
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => handleTicketQuantityChange({ target: { value: ticketQuantity - 1 } })}
-                        className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
-                        disabled={ticketQuantity <= 1}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max={event.available_tickets}
-                        value={ticketQuantity}
-                        onChange={handleTicketQuantityChange}
-                        className="block w-20 px-3 py-2 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  {event.available_tickets > 0 && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Number of Tickets
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={event.available_tickets}
+                          value={ticketQuantity}
+                          onChange={handleTicketQuantityChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <p className="text-lg font-semibold text-gray-900">
+                          Total: ₹{(event.price * ticketQuantity).toLocaleString('en-IN')}
+                        </p>
+                      </div>
+
+                      <RazorpayPayment
+                        amount={event.price * ticketQuantity * 100} // Convert to paise
+                        onSuccess={handlePaymentSuccess}
+                        onFailure={handlePaymentFailure}
+                        type="ticket"
+                        eventId={event.id}
+                        quantity={ticketQuantity}
                       />
-                      <button
-                        type="button"
-                        onClick={() => handleTicketQuantityChange({ target: { value: ticketQuantity + 1 } })}
-                        className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
-                        disabled={ticketQuantity >= event.available_tickets}
-                      >
-                        +
-                      </button>
                     </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500 mb-2">Total Amount</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      ₹{(event.price * ticketQuantity).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-
-                  {!localStorage.getItem('token') ? (
-                    <div>
-                      <p className="text-sm text-gray-500 mb-4">Please log in to purchase tickets</p>
-                      <Button 
-                        onClick={() => navigate('/login')}
-                        className="w-full"
-                      >
-                        Login to Continue
-                      </Button>
-                    </div>
-                  ) : (
-                    <RazorpayPayment
-                      amount={(event.price * ticketQuantity) * 100}
-                      onSuccess={handlePaymentSuccess}
-                      onFailure={handlePaymentFailure}
-                      type="ticket"
-                      event_id={event.id}
-                      quantity={ticketQuantity}
-                    />
                   )}
                 </div>
               </CardContent>

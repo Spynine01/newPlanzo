@@ -22,7 +22,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'preferences'
+        'is_admin',
+        'is_organizer',
+        'is_organizer_pending',
+        'preferences',
     ];
 
     /**
@@ -42,11 +45,41 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'preferences' => 'array'
+        'preferences' => 'array',
+        'is_admin' => 'boolean',
+        'is_organizer' => 'boolean',
+        'is_organizer_pending' => 'boolean',
     ];
 
+    /**
+     * Get the wallet associated with the user.
+     */
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    /**
+     * Get the events organized by the user.
+     */
+    public function events()
+    {
+        return $this->hasMany(Event::class, 'organizer_id');
+    }
+
+    /**
+     * Get the recommendations requested by the user.
+     */
+    public function recommendations()
+    {
+        return $this->hasMany(AdminRecommendation::class);
+    }
+
+    /**
+     * Get the transactions made by the user.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 }

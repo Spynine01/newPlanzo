@@ -1,16 +1,27 @@
-import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import './Login.css'
 import api from '../../services/api'
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check if we have a success message from registration
+    if (location.state?.message) {
+      setSuccess(location.state.message);
+      // Clear the location state to prevent showing the message again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     setFormData({
@@ -49,24 +60,36 @@ export default function Login() {
         password: formData.password
       });
   
+      // Store auth token, user info, and role
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('userRole', response.data.role || '');
+      localStorage.setItem('userName', response.data.user.name || '');
+      localStorage.setItem('userEmail', response.data.user.email || '');
   
-      if (response.data.user.role === 'event_organizer') {
-        navigate('/event-dashboard');
+      // Check if there's a redirect path stored in location state
+      const redirectTo = location.state?.redirectTo || '/events';
+      
+      // Redirect based on user role or intended destination
+      if (response.data.role === 'admin') {
+        navigate('/admin');
       } else {
-        navigate('/events');
+        navigate(redirectTo);
       }
     } catch (error) {
+      console.error('Login error:', error.response);
+      
       if (error.response?.status === 403) {
-        setError('Your account is pending verification. Please wait for approval.');
+        setError('Your account is pending approval. Please wait for admin verification.');
+      } else if (error.response?.status === 401) {
+        setError('Invalid email or password. Please check your credentials.');
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
       } else if (error.response?.data?.errors) {
         const firstError = Object.values(error.response.data.errors)[0][0];
         setError(firstError);
-      } else if (error.response?.data?.message) {
-        setError(error.response.data.message);
       } else {
-        setError('Login failed. Please check your credentials and try again.');
+        setError('Login failed. Please try again later.');
       }
     } finally {
       setLoading(false);
@@ -79,6 +102,11 @@ export default function Login() {
         <div className="drop">
           <div className="context">
             <h2>Sign In</h2>
+            {success && (
+              <div className="success-message" style={{ color: '#33aa33', marginBottom: '10px', fontSize: '0.9em' }}>
+                {success}
+              </div>
+            )}
             {error && (
               <div className="error-message" style={{ color: '#ff3333', marginBottom: '10px', fontSize: '0.9em' }}>
                 {error}

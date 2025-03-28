@@ -30,7 +30,18 @@ class Event extends Model
         'available_tickets' => 'integer'
     ];
 
-    public function adminRecommendations()
+    /**
+     * Get the organizer that owns the event.
+     */
+    public function organizer()
+    {
+        return $this->belongsTo(User::class, 'organizer_id');
+    }
+
+    /**
+     * Get the recommendations for this event.
+     */
+    public function recommendations()
     {
         return $this->hasMany(AdminRecommendation::class);
     }
