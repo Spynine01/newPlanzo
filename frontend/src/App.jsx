@@ -68,8 +68,8 @@ const App = () => {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex">
-        {/* Sidebar */}
-        <Sidebar />
+        {/* Sidebar - Only show for admin users */}
+        {isAdmin && <Sidebar />}
 
         {/* Main Content */}
         <div className="flex-1">

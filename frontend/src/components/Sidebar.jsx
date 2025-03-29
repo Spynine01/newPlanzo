@@ -61,31 +61,31 @@ export const Sidebar = () => {
             path:"/admin",
             name:"Admin Dashboard",
             icon:<MdAdminPanelSettings/>,
-            visible: userRole === 'admin'
+            visible: true
         },
         {
             path:"/dashboard",
             name:"Analytics",
             icon:<MdDashboard/>,
-            visible: userRole === 'admin'
+            visible: true
         },
         {
             path:"/users",
             name:"Users",
             icon:<FaUsers/>,
-            visible: userRole === 'admin'
+            visible: true
         },
         {
             path:"/recommendations",
             name:"Recommendations",
             icon:<FaClipboardList/>,
-            visible: userRole === 'admin'
+            visible: true
         },
         {
             path:"/settings",
             name:"Settings",
             icon:<FaCog/>,
-            visible: userRole === 'admin'
+            visible: true
         }
     ];
     
