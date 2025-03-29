@@ -35,7 +35,10 @@ class AdminController extends Controller
      */
     public function getUsers()
     {
-        $users = User::with('wallet')->get();
+        $users = User::with('wallet')->get()->map(function($user) {
+            $role = $user->is_admin ? 'Admin' : ($user->is_organizer ? 'Organizer' : 'User');
+            return array_merge($user->toArray(), ['role' => $role]);
+        });
         return response()->json($users);
     }
 
@@ -44,48 +47,41 @@ class AdminController extends Controller
      */
     public function deleteUser($id)
     {
-        // Begin transaction
         DB::beginTransaction();
 
         try {
             // First check if it's a regular user
             $user = User::find($id);
             
-            // If not found in users table, check event_org table
             if (!$user) {
-                $eventOrg = EventOrg::find($id);
-                if (!$eventOrg) {
-                    return response()->json(['message' => 'User not found'], 404);
-                }
-                
-                // Delete event organizer's events first
-                Event::where('organizer_id', $eventOrg->id)->delete();
-                
-                // Delete event organizer
-                $eventOrg->delete();
-            } else {
-                // Don't allow deleting admin users
-                if ($user->is_admin) {
-                    return response()->json(['message' => 'Cannot delete admin users'], 403);
-                }
-
-                // Delete related data for regular user
-                if ($user->wallet) {
-                    $user->wallet->delete();
-                }
-                
-                // Delete the user's events
-                Event::where('organizer_id', $user->id)->delete();
-                
-                // Delete the user's recommendations
-                AdminRecommendation::where('user_id', $user->id)->delete();
-                
-                // Delete the user's transactions
-                Transaction::where('user_id', $user->id)->delete();
-                
-                // Delete the user
-                $user->delete();
+                return response()->json(['message' => 'User not found'], 404);
             }
+
+            // Don't allow deleting admin users
+            if ($user->is_admin) {
+                return response()->json(['message' => 'Cannot delete admin users'], 403);
+            }
+
+            // Delete related data for regular user
+            if ($user->wallet) {
+                // Delete transactions first since they depend on wallet
+                $user->wallet->transactions()->delete();
+                $user->wallet->delete();
+            }
+            
+            // Delete the user's events
+            Event::where('organizer_id', $user->id)->delete();
+            
+            // If user is an organizer, delete their event_org record
+            if ($user->is_organizer) {
+                EventOrg::where('email', $user->email)->delete();
+            }
+            
+            // Revoke all tokens for this user
+            $user->tokens()->delete();
+            
+            // Delete the user
+            $user->delete();
             
             DB::commit();
             return response()->json(['message' => 'User deleted successfully']);
@@ -96,22 +92,9 @@ class AdminController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            // Check for specific database errors
-            if ($e->getCode() == 23000) { // Integrity constraint violation
-                return response()->json([
-                    'message' => 'Cannot delete user due to related records',
-                    'error' => 'This user has related records that need to be deleted first'
-                ], 422);
-            }
-            
             return response()->json([
                 'message' => 'Failed to delete user',
-                'error' => $e->getMessage(),
-                'debug' => app()->environment('local') ? [
-                    'trace' => $e->getTraceAsString(),
-                    'line' => $e->getLine(),
-                    'file' => $e->getFile()
-                ] : null
+                'error' => $e->getMessage()
             ], 500);
         }
     }
