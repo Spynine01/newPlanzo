@@ -167,6 +167,10 @@ const Dashboard = () => {
                             error.response?.data?.error || 
                             'Failed to delete user. Please try again.';
         alert(errorMessage);
+        // Log additional error details in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Error details:', error.response?.data);
+        }
       }
     }
   };

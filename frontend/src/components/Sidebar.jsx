@@ -42,12 +42,6 @@ export const Sidebar = () => {
             visible: true
         },
         {
-            path:"/wallet",
-            name:"Wallet",
-            icon:<FaCreditCard/>,
-            visible: isAuthenticated
-        },
-        {
             path:"/profile",
             name:"Profile",
             icon:<FaUserAlt/>,

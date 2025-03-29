@@ -99,7 +99,7 @@ const App = () => {
                     </Link>
                   )}
                   
-                  {isAuthenticated && (
+                  {isAuthenticated && (isEventOrganizer || isAdmin) && (
                     <Link
                       to="/wallet"
                       className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
@@ -171,7 +171,7 @@ const App = () => {
               <Route path="/wallet" element={
                 <ProtectedRoute 
                   element={<Wallet />} 
-                  allowedRoles={['organizer', 'user', 'admin']} 
+                  allowedRoles={['organizer', 'admin']} 
                 />
               } />
               

@@ -27,6 +27,9 @@ class UserController extends Controller
         $preferences = $user->preferences;
         $userData['preferences'] = $preferences ? json_decode($preferences, true) : null;
         
+        // Add role information
+        $userData['role'] = $user->is_admin ? 'Admin' : ($user->is_organizer ? 'Organizer' : 'User');
+        
         return response()->json($userData);
     }
 
