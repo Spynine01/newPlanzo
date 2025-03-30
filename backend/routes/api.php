@@ -64,14 +64,16 @@ Route::get('/eventOrgFetch', [EventOrganisorPendingController::class, 'index']);
 //     }
 // });
 
-// Event routes
-Route::apiResource('events', EventController::class);
-
 // Public event routes (no authentication required)
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Protected event routes
+    Route::post('events', [EventController::class, 'store']);
+    Route::put('events/{event}', [EventController::class, 'update']);
+    Route::delete('events/{event}', [EventController::class, 'destroy']);
+
     Route::post('/logout', [LoginController::class, 'logout']);
     
     // User profile routes
