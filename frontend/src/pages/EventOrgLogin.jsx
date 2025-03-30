@@ -22,13 +22,16 @@ function EventOrgLogin() {
       });
 
       if (response.data.success) {
-        localStorage.setItem("eventorg", response.data.email); // Store session manually
-        navigate("/eventDashboard"); // Redirect after login
+        // Store token and user role
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userRole", "organizer");
+        localStorage.setItem("eventorg", response.data.email);
+        navigate("/eventDashboard");
       } else {
         setError(response.data.message);
       }
     } catch (err) {
-      setError("Error logging in.");
+      setError(err.response?.data?.message || "Error logging in.");
     }
   };
 

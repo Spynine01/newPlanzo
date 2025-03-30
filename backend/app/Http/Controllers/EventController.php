@@ -117,34 +117,53 @@ class EventController extends Controller
             $data = $validator->validated();
             Log::info('Validated data:', $data);
 
+            // Get the authenticated user
+            $user = auth()->user();
+            if (!$user) {
+                Log::error('No authenticated user found when creating event');
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Set organizer_id from authenticated user
+            $data['organizer_id'] = $user->id;
+            Log::info('Setting organizer_id:', ['user_id' => $user->id]);
+
+            // Create event first to get the ID
+            $event = Event::create($data);
+
             // Handle image upload
             if ($request->hasFile('image')) {
                 try {
                     Log::info('Processing image upload');
-                    $path = $request->file('image')->store('events', 'public');
+                    $file = $request->file('image');
+                    $extension = $file->getClientOriginalExtension();
+                    
+                    // Create filename using event ID and name
+                    $filename = $event->id . '_' . str_replace(' ', '_', strtolower($event->name)) . '.' . $extension;
+                    $path = $file->storeAs('events', $filename, 'public');
                     $data['image_url'] = Storage::url($path);
+                    
+                    // Update event with image URL
+                    $event->update(['image_url' => $data['image_url']]);
+                    
                     Log::info('Image uploaded successfully:', [
                         'path' => $path,
-                        'url' => $data['image_url']
+                        'url' => $data['image_url'],
+                        'filename' => $filename
                     ]);
                 } catch (Exception $e) {
                     Log::error('Image upload failed:', [
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
+                    // Delete the event if image upload fails
+                    $event->delete();
                     return response()->json([
                         'message' => 'Failed to upload image',
                         'error' => $e->getMessage()
                     ], 500);
                 }
             }
-
-            // Set default organizer_id
-            $data['organizer_id'] = 1;
-
-            // Create event
-            Log::info('Attempting to create event with data:', $data);
-            $event = Event::create($data);
 
             Log::info('Event created successfully:', [
                 'event_id' => $event->id,
@@ -211,11 +230,34 @@ class EventController extends Controller
             $data = $validator->validated();
 
             if ($request->hasFile('image')) {
-                if ($event->image_url) {
-                    Storage::delete(str_replace('/storage/', 'public/', $event->image_url));
+                try {
+                    // Delete old image if exists
+                    if ($event->image_url) {
+                        Storage::delete(str_replace('/storage/', 'public/', $event->image_url));
+                    }
+
+                    // Upload new image with event ID and name
+                    $file = $request->file('image');
+                    $extension = $file->getClientOriginalExtension();
+                    $filename = $event->id . '_' . str_replace(' ', '_', strtolower($event->name)) . '.' . $extension;
+                    $path = $file->storeAs('events', $filename, 'public');
+                    $data['image_url'] = Storage::url($path);
+
+                    Log::info('Image updated successfully:', [
+                        'path' => $path,
+                        'url' => $data['image_url'],
+                        'filename' => $filename
+                    ]);
+                } catch (Exception $e) {
+                    Log::error('Image update failed:', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    return response()->json([
+                        'message' => 'Failed to update image',
+                        'error' => $e->getMessage()
+                    ], 500);
                 }
-                $path = $request->file('image')->store('events', 'public');
-                $data['image_url'] = Storage::url($path);
             }
 
             $event->update($data);
