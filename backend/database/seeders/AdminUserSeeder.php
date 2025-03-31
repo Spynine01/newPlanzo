@@ -23,13 +23,11 @@ class AdminUserSeeder extends Seeder
             'is_admin' => true,
         ]);
 
-        // Create a wallet for the admin user
+        // Create wallet for admin
         Wallet::create([
             'user_id' => $admin->id,
-            'coins' => 1000, // Give admin a starting balance
-            'total_spent' => 0,
+            'balance' => 0,
+            'coins' => 0
         ]);
-
-        $this->command->info('Admin user created with email: admin@planzo.com and password: admin123');
     }
 }

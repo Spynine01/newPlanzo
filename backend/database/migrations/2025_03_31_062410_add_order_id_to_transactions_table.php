@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddPaymentDetailsToTransactionsTable extends Migration
+class AddOrderIdToTransactionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,7 @@ class AddPaymentDetailsToTransactionsTable extends Migration
     public function up()
     {
         Schema::table('transactions', function (Blueprint $table) {
-            //
+            $table->string('order_id')->nullable()->after('payment_id');
         });
     }
 
@@ -26,7 +26,7 @@ class AddPaymentDetailsToTransactionsTable extends Migration
     public function down()
     {
         Schema::table('transactions', function (Blueprint $table) {
-            //
+            $table->dropColumn('order_id');
         });
     }
 }

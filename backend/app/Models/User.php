@@ -26,6 +26,7 @@ class User extends Authenticatable
         'is_organizer',
         'is_organizer_pending',
         'preferences',
+        'role',
     ];
 
     /**

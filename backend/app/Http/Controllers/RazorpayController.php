@@ -121,23 +121,37 @@ class RazorpayController extends Controller
             $order = $this->razorpay->order->fetch($request->razorpay_order_id);
             $notes = $order->notes;
 
+            // Convert amount from rupees to paise for comparison with order amount
+            $amountInPaise = $request->amount * 100;
+
+            // Verify that the amount matches the order amount
+            if ($amountInPaise != $order->amount) {
+                Log::error('Amount mismatch', [
+                    'received_amount' => $amountInPaise,
+                    'order_amount' => $order->amount
+                ]);
+                throw new \Exception('Amount mismatch');
+            }
+
             // Store payment details based on type
             if ($notes['type'] === 'wallet') {
-                DB::transaction(function () use ($request, $notes) {
+                DB::transaction(function () use ($request, $notes, $amountInPaise) {
                     // Get user's wallet
                     $wallet = Wallet::where('user_id', auth()->id())->firstOrFail();
                     
-                    // Calculate platform fee (5%)
-                    $platformFee = $request->amount * 0.05;
+                    // Calculate platform fee (5%) - working with rupees now
+                    $amountInRupees = $request->amount;
+                    $platformFee = $amountInRupees * 0.05;
                     
                     // Calculate coins (1 coin = 10 rupees)
-                    $coins = (int) (($request->amount - $platformFee) / 10);
+                    $coins = (int) (($amountInRupees - $platformFee) / 10);
                     
                     // Create transaction
                     $transaction = Transaction::create([
                         'wallet_id' => $wallet->id,
+                        'user_id' => auth()->id(),
                         'type' => 'credit',
-                        'amount' => $request->amount,
+                        'amount' => $amountInRupees,
                         'coins' => $coins,
                         'platform_fee' => $platformFee,
                         'status' => 'completed',
@@ -147,14 +161,17 @@ class RazorpayController extends Controller
                     ]);
 
                     // Update wallet balance and coins
-                    $wallet->addCoins($coins, $request->amount - $platformFee, $platformFee);
+                    $wallet->addCoins($coins, $amountInRupees - $platformFee, $platformFee);
 
                     Log::info('Wallet updated successfully', [
                         'wallet_id' => $wallet->id,
                         'new_balance' => $wallet->balance,
                         'new_coins' => $wallet->coins,
                         'payment_id' => $request->razorpay_payment_id,
-                        'transaction_id' => $transaction->id
+                        'transaction_id' => $transaction->id,
+                        'amount_in_rupees' => $amountInRupees,
+                        'platform_fee' => $platformFee,
+                        'coins_added' => $coins
                     ]);
                 });
             } else if ($notes['type'] === 'ticket') {
@@ -167,7 +184,7 @@ class RazorpayController extends Controller
                         throw new \Exception('Not enough tickets available');
                     }
 
-                    // Create tickets
+                    // Create tickets - amount is already in rupees
                     for ($i = 0; $i < $notes['quantity']; $i++) {
                         Ticket::create([
                             'event_id' => $notes['event_id'],
@@ -186,7 +203,8 @@ class RazorpayController extends Controller
                         'event_id' => $notes['event_id'],
                         'quantity' => $notes['quantity'],
                         'payment_id' => $request->razorpay_payment_id,
-                        'remaining_tickets' => $event->available_tickets
+                        'remaining_tickets' => $event->available_tickets,
+                        'amount_per_ticket' => $request->amount / $notes['quantity']
                     ]);
                 });
             }
