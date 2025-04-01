@@ -31,7 +31,8 @@ body{
 }
 
 section{
-    padding:2rem 9%;
+    padding: 6rem 9%;
+    margin-bottom: 2rem;
 }
 
 .heading{
@@ -128,7 +129,7 @@ header .navbar a:hover{
     gap:1.5rem;
     min-height: 100vh;
     align-items: center;
-    background:url(./bg.jpg) no-repeat;
+    background: #983636;
     background-size: cover;
     background-position: center;
 }
@@ -136,6 +137,7 @@ header .navbar a:hover{
 .home .content{
     flex:1 1 40rem;
     padding-top: 6.5rem;
+    text-align: center;
 }
 
 .home .image{
@@ -158,14 +160,31 @@ header .navbar a:hover{
 }
 
 .home .content h1{
-    font-size: 5rem;
+    font-size: 8rem;
     color:white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .home .content p{
-    font-size: 1.7rem;
+    font-size: 2.5rem;
     color:white;
     padding:1rem 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.home .content .btn {
+    font-size: 2rem;
+    padding: 1rem 3.5rem;
+    background-color: white;
+    color: #983636;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.home .content .btn:hover {
+    background-color: #f8f8f8;
+    color: #983636;
+    transform: scale(1.05);
 }
 
 .speciality .box-container{
@@ -407,8 +426,7 @@ header .navbar a:hover{
 }
 
 .image-slider {
-  height: 500px;
-  width: 100%;
+  display: none; /* Hide the slider for now */
 }
 
 .swiper-slide {
