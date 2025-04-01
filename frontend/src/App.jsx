@@ -34,6 +34,11 @@ const ProtectedRoute = ({ element, allowedRoles = [] }) => {
   return element;
 };
 
+// Landing page component to handle the root route
+const LandingPage = () => {
+  return null; // This will render the index.html from public folder
+};
+
 const App = () => {
   const { isAuthenticated, userRole, logout, loading } = useAuth();
 
@@ -61,90 +66,96 @@ const App = () => {
       <div className="min-h-screen bg-gray-50 flex">
         {/* Main Content */}
         <div className="flex-1">
-          {/* Navigation */}
-          <nav className="bg-white shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between h-16">
-                <div className="flex">
-                  <Link to="/" className="flex items-center text-xl font-bold text-blue-600">
-                    Planzo
-                  </Link>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Link
-                    to="/events"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Browse Events
-                  </Link>
-                  
-                  {isAuthenticated && isEventOrganizer && (
-                    <Link
-                      to="/events/add"
-                      className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium"
-                    >
-                      Create Event
-                    </Link>
-                  )}
-                  
-                  {isAuthenticated && (isEventOrganizer || isAdmin) && (
-                    <Link
-                      to="/wallet"
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Wallet
-                    </Link>
-                  )}
-                  
-                  {isAuthenticated && isAdmin && (
-                    <Link
-                      to="/admin"
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Admin Dashboard
-                    </Link>
-                  )}
-                  
-                  {isAuthenticated ? (
+          {/* Navigation - Only show on non-landing pages */}
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="*" element={
+              <nav className="bg-white shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="flex justify-between h-16">
+                    <div className="flex">
+                      <Link to="/" className="flex items-center text-xl font-bold text-blue-600">
+                        Planzo
+                      </Link>
+                    </div>
                     <div className="flex items-center space-x-4">
                       <Link
-                        to="/profile"
+                        to="/events"
                         className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                       >
-                        Profile
+                        Browse Events
                       </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium"
-                      >
-                        Logout
-                      </button>
+                      
+                      {isAuthenticated && isEventOrganizer && (
+                        <Link
+                          to="/events/add"
+                          className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                          Create Event
+                        </Link>
+                      )}
+                      
+                      {isAuthenticated && (isEventOrganizer || isAdmin) && (
+                        <Link
+                          to="/wallet"
+                          className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                          Wallet
+                        </Link>
+                      )}
+                      
+                      {isAuthenticated && isAdmin && (
+                        <Link
+                          to="/admin"
+                          className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      
+                      {isAuthenticated ? (
+                        <div className="flex items-center space-x-4">
+                          <Link
+                            to="/profile"
+                            className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                          >
+                            Profile
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <Link
+                            to="/login"
+                            className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                          >
+                            Login
+                          </Link>
+                          <Link
+                            to="/register"
+                            className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md text-sm font-medium"
+                          >
+                            Sign Up
+                          </Link>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <>
-                      <Link
-                        to="/login"
-                        className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                      >
-                        Login
-                      </Link>
-                      <Link
-                        to="/register"
-                        className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md text-sm font-medium"
-                      >
-                        Sign Up
-                      </Link>
-                    </>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </nav>
+              </nav>
+            } />
+          </Routes>
 
           {/* Routes */}
           <div className="p-6">
             <Routes>
-              <Route path="/" element={<Events />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/events" element={<Events />} />
               <Route path="/events/:id" element={<EventDetails />} />
               
