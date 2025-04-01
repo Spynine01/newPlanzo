@@ -7,12 +7,12 @@
     <title>Planzo - Event Management</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="stylesheet" href="./assets/styles.css">
 </head>
 
 <body>
     <header>
-        <a href="#" class="logo"><img src="/assets/last last logo.png" alt="logo" width="50px" height=""></a>
+        <a href="#" class="logo"><img src="./assets/last last logo.png" alt="logo" width="50px" height=""></a>
 
         <div id="menu-bar" class="fas fa-bars"></div>
 
@@ -31,12 +31,12 @@
 
         <div class="swiper-container image-slider" id="image-slider">
             <div class="swiper-wrapper">
-                <div class="swiper-slide"><img src="/assets/r1.jpg" alt=""></div>
-                <div class="swiper-slide"><img src="/assets/r2.jpg" alt=""></div>
-                <div class="swiper-slide"><img src="/assets/r3.jpg" alt=""></div>
-                <div class="swiper-slide"><img src="/assets/r4.jpg" alt=""></div>
-                <div class="swiper-slide"><img src="/assets/r5.jpg" alt=""></div>
-                <div class="swiper-slide"><img src="/assets/r6.jpg" alt=""></div>
+                <div class="swiper-slide"><img src="./assets/r1.jpg" alt=""></div>
+                <div class="swiper-slide"><img src="./assets/r2.jpg" alt=""></div>
+                <div class="swiper-slide"><img src="./assets/r3.jpg" alt=""></div>
+                <div class="swiper-slide"><img src="./assets/r4.jpg" alt=""></div>
+                <div class="swiper-slide"><img src="./assets/r5.jpg" alt=""></div>
+                <div class="swiper-slide"><img src="./assets/r6.jpg" alt=""></div>
             </div>
         </div>
     </section>
@@ -73,13 +73,13 @@
 
         <div class="box-container">
             <div class="box">
-                <img src="/assets/r6.jpg">
+                <img src="./assets/r6.jpg">
             </div>
             <div class="box">
-                <img src="/assets/r7.jpg">
+                <img src="./assets/r7.jpg">
             </div>
             <div class="box">
-                <img src="/assets/r1.jpg">
+                <img src="./assets/r1.jpg">
             </div>
         </div>
     </div>
@@ -121,38 +121,7 @@
     </section>
 
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Swiper
-            var swiper = new Swiper('.swiper-container', {
-                effect: 'coverflow',
-                grabCursor: true,
-                centeredSlides: true,
-                slidesPerView: 'auto',
-                coverflowEffect: {
-                    rotate: 0,
-                    stretch: 0,
-                    depth: 100,
-                    modifier: 2,
-                    slideShadows: true,
-                },
-                loop: true,
-                autoplay: {
-                    delay: 3000,
-                    disableOnInteraction: false,
-                },
-            });
-
-            // Mobile menu toggle
-            let menu = document.querySelector('#menu-bar');
-            let navbar = document.querySelector('.navbar');
-
-            menu.addEventListener('click', () => {
-                menu.classList.toggle('fa-times');
-                navbar.classList.toggle('active');
-            });
-        });
-    </script>
+    <script src="./assets/script.js"></script>
 </body>
 
 </html> 
