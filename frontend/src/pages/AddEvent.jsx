@@ -337,22 +337,22 @@ const AddEvent = () => {
     
     switch (step) {
       case 1:
-        if (!formData.name) newErrors.name = 'Event name is required';
-        if (!formData.description) newErrors.description = 'Description is required';
-        if (!formData.category) newErrors.category = 'Category is required';
+    if (!formData.name) newErrors.name = 'Event name is required';
+    if (!formData.description) newErrors.description = 'Description is required';
+    if (!formData.category) newErrors.category = 'Category is required';
         break;
       case 2:
-        if (!formData.date) newErrors.date = 'Date is required';
-        if (!formData.time) newErrors.time = 'Time is required';
+    if (!formData.date) newErrors.date = 'Date is required';
+    if (!formData.time) newErrors.time = 'Time is required';
         break;
       case 3:
-        if (!formData.location) newErrors.location = 'Location is required';
-        if (!formData.venue) newErrors.venue = 'Venue is required';
-        if (!formData.address) newErrors.address = 'Address is required';
+    if (!formData.location) newErrors.location = 'Location is required';
+    if (!formData.venue) newErrors.venue = 'Venue is required';
+    if (!formData.address) newErrors.address = 'Address is required';
         break;
       case 4:
-        if (!formData.price) newErrors.price = 'Price is required';
-        if (!formData.available_tickets) newErrors.available_tickets = 'Available tickets is required';
+    if (!formData.price) newErrors.price = 'Price is required';
+    if (!formData.available_tickets) newErrors.available_tickets = 'Available tickets is required';
         
         const numericPrice = parseFloat(formData.price);
         const numericTickets = parseInt(formData.available_tickets, 10);
@@ -392,7 +392,7 @@ const AddEvent = () => {
     setLoading(true);
     try {
       const formDataToSend = new FormData();
-      
+
       formDataToSend.append('name', formData.name.trim());
       formDataToSend.append('description', formData.description.trim());
       formDataToSend.append('category', formData.category.trim());
@@ -454,59 +454,59 @@ const AddEvent = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return (
+  return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Event Name</label>
-              <Input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Event Name</label>
+                <Input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                 className={errors.name ? 'border-red-500' : ''}
-              />
+                />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
                 rows={4}
                 className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.description ? 'border-red-500' : ''}`}
               />
               {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Category</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
                 className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.category ? 'border-red-500' : ''}`}
-              >
-                <option value="">Select a category</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
               {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
-            </div>
-          </div>
+                </div>
+              </div>
         );
 
       case 2:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Date</label>
-              <Input
-                type="date"
-                name="date"
-                value={formData.date}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <Input
+                    type="date"
+                    name="date"
+                    value={formData.date}
                 onChange={(e) => {
                   const selectedDate = new Date(e.target.value);
                   const today = new Date();
@@ -523,31 +523,31 @@ const AddEvent = () => {
               />
               {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
               <p className="text-gray-500 text-sm mt-1">Select a present or future date</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Time</label>
-              <Input
-                type="time"
-                name="time"
-                value={formData.time}
-                onChange={handleChange}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Time</label>
+                  <Input
+                    type="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleChange}
                 className={errors.time ? 'border-red-500' : ''}
-              />
+                  />
               {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
-            </div>
-          </div>
+                </div>
+              </div>
         );
 
       case 3:
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Location</label>
-              <Input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <Input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
                 className={errors.location ? 'border-red-500' : ''}
               />
               {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
@@ -591,9 +591,9 @@ const AddEvent = () => {
                     <p className="text-gray-800 p-2 bg-gray-50 rounded border border-gray-200">
                       {recommendations.find(rec => rec.recommendationType === 'location' && rec.status === 'responded').responseText}
                     </p>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                       size="sm" 
                       className="mt-2 text-xs"
                       onClick={() => setFormData(prev => ({
@@ -602,8 +602,8 @@ const AddEvent = () => {
                       }))}
                     >
                       Use This Recommendation
-                    </Button>
-                  </div>
+                  </Button>
+                </div>
                 )}
               </div>
             )}
@@ -617,15 +617,15 @@ const AddEvent = () => {
               >
                 {recommendations.some(rec => rec.recommendationType === 'location' && rec.status === 'pending') ? 'Waiting...' : 'Get Location Recommendation (10 coins)'}
               </Button>
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Venue</label>
-              <Input
-                type="text"
-                name="venue"
-                value={formData.venue}
-                onChange={handleChange}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Venue</label>
+                <Input
+                  type="text"
+                  name="venue"
+                  value={formData.venue}
+                  onChange={handleChange}
                 className={errors.venue ? 'border-red-500' : ''}
               />
               {errors.venue && <p className="text-red-500 text-sm mt-1">{errors.venue}</p>}
@@ -695,34 +695,34 @@ const AddEvent = () => {
               >
                 {recommendations.some(rec => rec.recommendationType === 'venue' && rec.status === 'pending') ? 'Waiting...' : 'Get Venue Recommendation (10 coins)'}
               </Button>
-            </div>
+              </div>
 
-            <div>
+              <div>
               <label className="block text-sm font-medium text-gray-700">Full Address</label>
               <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
                 rows={2}
                 className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.address ? 'border-red-500' : ''}`}
-              />
+                />
               {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
             </div>
-          </div>
+              </div>
         );
 
       case 4:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+                <div>
               <label className="block text-sm font-medium text-gray-700">Price (₹)</label>
-              <Input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
+                    <Input
+                      type="number"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleChange}
+                      min="0"
+                      step="0.01"
                 className={errors.price ? 'border-red-500' : ''}
               />
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
@@ -747,13 +747,13 @@ const AddEvent = () => {
               )}
             </div>
             <div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Available Tickets</label>
-                <Input
-                  type="number"
-                  name="available_tickets"
-                  value={formData.available_tickets}
-                  onChange={handleChange}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Available Tickets</label>
+                  <Input
+                    type="number"
+                    name="available_tickets"
+                    value={formData.available_tickets}
+                    onChange={handleChange}
                   min="1"
                   className={errors.available_tickets ? 'border-red-500' : ''}
                 />
@@ -843,12 +843,12 @@ const AddEvent = () => {
 
       case 5:
         return (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Event Image</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Event Image</label>
             <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
               className="mt-1"
             />
             {formData.image && (
@@ -1121,14 +1121,14 @@ const AddEvent = () => {
                     Next
                   </Button>
                 ) : (
-                  <Button
+                <Button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={loading}
+                  disabled={loading}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {loading ? 'Creating Event...' : 'Create Event'}
-                  </Button>
+                >
+                  {loading ? 'Creating Event...' : 'Create Event'}
+                </Button>
                 )}
               </div>
             </div>

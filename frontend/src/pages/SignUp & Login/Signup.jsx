@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Signup.css';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { login, isAuthenticated, userRole } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,6 +18,18 @@ export default function Signup() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect if user is already authenticated
+    if (isAuthenticated) {
+      // Redirect based on role or to default page
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/events');
+      }
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -116,9 +130,8 @@ export default function Signup() {
         return;
       }
 
-      // For regular users, proceed with login
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // For regular users, use the auth context login method
+      login(response.data.token, response.data.user, response.data.user.role || 'user');
       navigate('/events');
     } catch (error) {
       if (error.response?.data?.errors) {

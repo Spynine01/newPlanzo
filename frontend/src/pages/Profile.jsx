@@ -5,8 +5,10 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
+  const { userRole, userName, userEmail, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('personal');
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({
@@ -25,7 +27,6 @@ const Profile = () => {
     confirm_password: ''
   });
   const [errors, setErrors] = useState({});
-  const isOrganizer = userData.role === 'organizer';
 
   useEffect(() => {
     fetchUserData();
@@ -39,9 +40,9 @@ const Profile = () => {
       // Set up user data from response
       const user = response.data;
       setUserData({
-        name: user.name || '',
-        email: user.email || '',
-        role: user.role || 'user',
+        name: user.name || userName || '',
+        email: user.email || userEmail || '',
+        role: user.role || userRole || 'user',
         preferences: {
           category: user.preferences?.category || '',
           location: user.preferences?.location || '',
@@ -50,9 +51,50 @@ const Profile = () => {
       });
     } catch (error) {
       console.error('Failed to fetch user data:', error);
+      // If API fails, use data from AuthContext
+      setUserData({
+        name: userName || '',
+        email: userEmail || '',
+        role: userRole || 'user',
+        preferences: {
+          category: '',
+          location: '',
+          notifications: true
+        }
+      });
       toast.error('Failed to load your profile information');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Get role display name
+  const getRoleDisplayName = (role) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrator';
+      case 'organizer':
+        return 'Event Organizer';
+      case 'event_organizer':
+        return 'Event Organizer';
+      case 'user':
+        return 'User';
+      default:
+        return role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User';
+    }
+  };
+
+  // Check if user is an organizer
+  const isOrganizer = userData.role === 'organizer' || userData.role === 'event_organizer' || userRole === 'organizer' || userRole === 'event_organizer';
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/logout');
+      logout(); // Use the logout function from AuthContext
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Failed to logout:', error);
+      toast.error('Failed to logout');
     }
   };
 
@@ -181,17 +223,6 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await api.post('/logout');
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Failed to logout:', error);
-      toast.error('Failed to logout');
-    }
-  };
-
   if (loading && !userData.name) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -220,7 +251,7 @@ const Profile = () => {
                 <h2 className="text-xl font-semibold">{userData.name}</h2>
                 <p className="text-sm text-gray-600">{userData.email}</p>
                 <span className="inline-block px-2 py-1 mt-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                  {isOrganizer ? 'Event Organizer' : 'User'}
+                  {getRoleDisplayName(userData.role || userRole)}
                 </span>
               </div>
             </div>
@@ -265,50 +296,57 @@ const Profile = () => {
 
           <div className="p-6">
             {activeTab === 'personal' && (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                  <Input
-                    type="text"
-                    name="name"
-                    value={userData.name}
-                    onChange={handlePersonalInfoChange}
-                    className="mt-1"
-                    error={errors.name}
-                  />
-                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email Address</label>
-                  <Input
-                    type="email"
-                    name="email"
-                    value={userData.email}
-                    onChange={handlePersonalInfoChange}
-                    className="mt-1"
-                    error={errors.email}
-                  />
-                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Account Type</label>
-                  <Input
-                    type="text"
-                    value={isOrganizer ? 'Event Organizer' : 'User'}
-                    className="mt-1 bg-gray-100"
-                    disabled
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Account type cannot be changed after registration
-                  </p>
-                </div>
-
-                <div className="pt-5">
-                  <Button onClick={updatePersonalInfo} disabled={loading} className="w-full md:w-auto">
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </Button>
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      Full Name
+                    </label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={userData.name}
+                      onChange={handlePersonalInfoChange}
+                      className="mt-1"
+                    />
+                    {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email Address
+                    </label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={userData.email}
+                      onChange={handlePersonalInfoChange}
+                      className="mt-1"
+                    />
+                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                      Account Type
+                    </label>
+                    <Input
+                      type="text"
+                      value={getRoleDisplayName(userData.role || userRole)}
+                      className="mt-1 bg-gray-100"
+                      disabled
+                    />
+                    <p className="mt-1 text-sm text-gray-500">Account type cannot be changed after registration</p>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <Button onClick={updatePersonalInfo} disabled={loading}>
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

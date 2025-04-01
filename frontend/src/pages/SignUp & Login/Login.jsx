@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import './Login.css'
 import api from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login, isAuthenticated, userRole } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -13,6 +15,18 @@ export default function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect if user is already authenticated
+    if (isAuthenticated) {
+      // Redirect based on role or to default page
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/events');
+      }
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   useEffect(() => {
     // Check if we have a success message from registration
@@ -60,12 +74,8 @@ export default function Login() {
         password: formData.password
       });
   
-      // Store auth token, user info, and role
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      localStorage.setItem('userRole', response.data.role || '');
-      localStorage.setItem('userName', response.data.user.name || '');
-      localStorage.setItem('userEmail', response.data.user.email || '');
+      // Use the login method from AuthContext instead of manually setting localStorage
+      login(response.data.token, response.data.user, response.data.role);
   
       // Check if there's a redirect path stored in location state
       const redirectTo = location.state?.redirectTo || '/events';

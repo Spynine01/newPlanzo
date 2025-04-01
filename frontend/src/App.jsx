@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import Events from './pages/Events';
 import AddEvent from './pages/AddEvent';
@@ -8,7 +8,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
 import Analytics from './pages/Analytics';
 import Comment from './pages/Comment';
-import Dashboard from './pages/Dasboard';
 import Product from './pages/Product';
 import ProductList from './pages/ProductList';
 import Login from './pages/SignUp & Login/Login';
@@ -18,15 +17,13 @@ import EventOrgRegister from './pages/EventOrgRegister';
 import SuperAdminLogin from './pages/SuperAdminLogin';
 import SuperPage from './pages/SuperPage';
 import Profile from './pages/Profile';
-import { Sidebar } from './components/Sidebar';
-import './components/Sidebar.css';
+import { useAuth } from './context/AuthContext';
 
 // Protected route component
 const ProtectedRoute = ({ element, allowedRoles = [] }) => {
-  const token = localStorage.getItem('token');
-  const userRole = localStorage.getItem('userRole');
+  const { isAuthenticated, userRole } = useAuth();
   
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
@@ -38,39 +35,30 @@ const ProtectedRoute = ({ element, allowedRoles = [] }) => {
 };
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState('');
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('userRole');
-    
-    setIsAuthenticated(!!token);
-    setUserRole(role || '');
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    setIsAuthenticated(false);
-    setUserRole('');
-    window.location.href = '/login';
-  };
+  const { isAuthenticated, userRole, logout, loading } = useAuth();
 
   // Check if user is an event organizer
   const isEventOrganizer = userRole === 'organizer';
   // Check if user is an admin
   const isAdmin = userRole === 'admin';
 
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
+  };
+
+  // Show loading indicator while checking auth state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex">
-        {/* Sidebar - Only show for admin users */}
-        {isAdmin && <Sidebar />}
-
         {/* Main Content */}
         <div className="flex-1">
           {/* Navigation */}
@@ -193,7 +181,6 @@ const App = () => {
               <Route path="/about" element={<About />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/comments" element={<Comment />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products" element={<ProductList />} />
               <Route path="/products/:id" element={<Product />} />
               
@@ -204,6 +191,9 @@ const App = () => {
               <Route path="/event-org/register" element={<EventOrgRegister />} />
               <Route path="/super-admin/login" element={<SuperAdminLogin />} />
               <Route path="/super-admin" element={<SuperPage />} />
+              
+              {/* Redirect dashboard route to admin */}
+              <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
               
               {/* Error Routes */}
               <Route path="/unauthorized" element={
