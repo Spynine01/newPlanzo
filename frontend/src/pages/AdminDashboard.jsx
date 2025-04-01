@@ -3,13 +3,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card'
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { adminApi } from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedRecommendation, setSelectedRecommendation] = useState(null);
-  const [response, setResponse] = useState('');
+  const [responseText, setResponseText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchRecommendations();
@@ -27,23 +29,41 @@ const AdminDashboard = () => {
 
   const handleResponse = async (e) => {
     e.preventDefault();
-    if (!selectedRecommendation || !response.trim()) return;
+    if (!responseText.trim()) {
+      toast.error('Please enter a response.');
+      return;
+    }
 
-    setLoading(true);
-    setError(null);
-
+    setSubmitting(true);
     try {
-      await adminApi.respondToRecommendation(selectedRecommendation.id, response.trim());
+      // Get the ID from the selected recommendation (either _id or temp_id)
+      const recommendationId = selectedRecommendation._id || selectedRecommendation.temp_id;
+      console.log(`Responding to recommendation with ID: ${recommendationId}`);
+      
+      const response = await adminApi.respondToRecommendation(
+        recommendationId,
+        responseText
+      );
 
-      setRecommendations(prev => 
-        prev.filter(rec => rec.id !== selectedRecommendation.id)
+      console.log('Response submitted successfully:', response.data);
+
+      // Update the recommendations list
+      setRecommendations(prevRecommendations =>
+        prevRecommendations.filter(rec => 
+          rec._id !== selectedRecommendation._id && 
+          rec.temp_id !== selectedRecommendation.temp_id
+        )
       );
       setSelectedRecommendation(null);
-      setResponse('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit response');
+      setResponseText('');
+      toast.success('Response submitted successfully.');
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      toast.error(
+        error.response?.data?.message || 'Failed to submit response.'
+      );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -96,9 +116,9 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   {recommendations.map((recommendation) => (
                     <div
-                      key={recommendation.id}
+                      key={recommendation._id}
                       className={`p-4 bg-white rounded-lg border ${
-                        selectedRecommendation?.id === recommendation.id
+                        selectedRecommendation?._id === recommendation._id
                           ? 'border-blue-500'
                           : ''
                       }`}
@@ -106,10 +126,16 @@ const AdminDashboard = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-medium text-gray-900">
-                            {getRecommendationType(recommendation.type)}
+                            {getRecommendationType(recommendation.recommendationType)}
                           </h3>
                           <p className="text-sm text-gray-500">
-                            Event: {recommendation.event.name}
+                            Organizer ID: {recommendation.organizerId}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Event: {recommendation.eventData?.title || 'N/A'}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Request: {recommendation.recommendationText}
                           </p>
                           <p className="text-sm text-gray-500">
                             Requested at: {formatDate(recommendation.created_at)}
@@ -124,12 +150,12 @@ const AdminDashboard = () => {
                         </Button>
                       </div>
 
-                      {selectedRecommendation?.id === recommendation.id && (
+                      {selectedRecommendation?._id === recommendation._id && (
                         <form onSubmit={handleResponse} className="mt-4 space-y-4">
                           <Input
                             type="text"
-                            value={response}
-                            onChange={(e) => setResponse(e.target.value)}
+                            value={responseText}
+                            onChange={(e) => setResponseText(e.target.value)}
                             placeholder="Enter your recommendation"
                             required
                           />
@@ -139,7 +165,7 @@ const AdminDashboard = () => {
                               variant="outline"
                               onClick={() => {
                                 setSelectedRecommendation(null);
-                                setResponse('');
+                                setResponseText('');
                               }}
                               className="flex-1"
                             >
@@ -149,9 +175,9 @@ const AdminDashboard = () => {
                               type="submit"
                               variant="primary"
                               className="flex-1"
-                              disabled={loading}
+                              disabled={submitting}
                             >
-                              {loading ? 'Submitting...' : 'Submit Response'}
+                              {submitting ? 'Submitting...' : 'Submit Response'}
                             </Button>
                           </div>
                         </form>

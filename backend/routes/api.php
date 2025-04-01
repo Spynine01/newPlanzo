@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\RecommendationController;
 
 
 /*
@@ -109,4 +110,38 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payment routes
     Route::post('/create-order', [RazorpayController::class, 'createOrder']);
     Route::post('/verify-payment', [RazorpayController::class, 'verifyPayment']);
+
+    // Recommendation Routes
+    Route::post('/recommendations/request', [RecommendationController::class, 'requestRecommendation']);
+    Route::get('/recommendations/pending', [RecommendationController::class, 'getPendingRecommendations']);
+    Route::get('/recommendations/my-recommendations', [RecommendationController::class, 'getUserRecommendations']);
+    Route::post('/recommendations/respond', [RecommendationController::class, 'respondToRecommendation']);
+    Route::post('/recommendations/create-event', [RecommendationController::class, 'createEventFromRecommendation']);
+    Route::get('/recommendations/by-temp-id/{temp_id}', [RecommendationController::class, 'findByTempId']);
+    Route::get('/recommendations/{recommendationId}', [RecommendationController::class, 'getRecommendation']);
+});
+
+// Admin routes
+Route::middleware('admin')->group(function () {
+    // Admin-only routes here
+});
+
+// Debugging routes
+Route::get('/debug/recommendation/{id}', function($id) {
+    try {
+        $byId = App\Models\Recommendation::find($id);
+        $byTempId = App\Models\Recommendation::where('temp_id', $id)->first();
+        
+        return response()->json([
+            'found_by_id' => $byId ? true : false,
+            'found_by_temp_id' => $byTempId ? true : false,
+            'by_id' => $byId,
+            'by_temp_id' => $byTempId
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });

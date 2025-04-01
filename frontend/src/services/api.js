@@ -91,11 +91,45 @@ export const walletApi = {
 
 export const adminApi = {
     // Get pending recommendations
-    getRecommendations: () => api.get('/admin/recommendations'),
+    getRecommendations: () => api.get('/recommendations/pending'),
 
     // Respond to a recommendation
-    respondToRecommendation: (id, response) => 
-        api.post(`/admin/recommendations/${id}/respond`, { response })
+    respondToRecommendation: (id, responseText) => 
+        api.post('/recommendations/respond', { 
+            recommendationId: id, 
+            responseText 
+        })
+};
+
+// Add recommendation-specific API object
+export const recommendationApi = {
+    // Request a new recommendation
+    requestRecommendation: (eventData) => api.post('/recommendations/request', eventData),
+    
+    // Get a specific recommendation with enhanced error handling
+    getRecommendation: (id) => {
+        console.log(`API call to get recommendation with ID: ${id}`);
+        // Make sure we don't try to fetch with an invalid ID
+        if (!id) {
+            console.error('Attempted to fetch recommendation with null/undefined ID');
+            return Promise.reject(new Error('Invalid recommendation ID'));
+        }
+        return api.get(`/recommendations/${id}`)
+            .catch(error => {
+                console.error(`Error fetching recommendation ${id}:`, error);
+                throw error; // Re-throw to let caller handle it
+            });
+    },
+    
+    // Get all recommendations for the current user
+    getUserRecommendations: () => api.get('/recommendations/my-recommendations'),
+    
+    // Create event from recommendation
+    createEventFromRecommendation: (recommendationId, eventData) => 
+        api.post(`/recommendations/create-event`, { recommendationId, eventData }),
+
+    // Get recommendation by temp_id
+    getRecommendationByTempId: (tempId) => api.get(`/recommendations/by-temp-id/${tempId}`)
 };
 
 export default api; 
