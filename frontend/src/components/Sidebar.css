@@ -1,0 +1,91 @@
+*{
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+}
+
+.container{
+  display: flex;
+}
+
+main{
+  width: 100%;
+  padding: 20px;
+}
+
+.sidebar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;
+}
+
+.sidebar {
+    background: #2c3e50;
+    color: white;
+    height: 100vh;
+    width: 250px;
+    transition: all .5s;
+    position: relative;
+}
+
+.top_section {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+}
+
+.bars {
+    display: flex;
+    font-size: 25px;
+    margin-left: 50px;
+    cursor: pointer;
+}
+
+.link {
+    display: flex;
+    color: white;
+    padding: 10px 15px;
+    gap: 15px;
+    transition: all 0.5s;
+    text-decoration: none;
+}
+
+.link:hover {
+    background: #34495e;
+}
+
+.link.active {
+    background: #34495e;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+}
+
+.link_text {
+    white-space: nowrap;
+    font-size: 15px;
+}
+
+/* Adjust main content to account for sidebar */
+main {
+    margin-left: 250px;
+    transition: all .5s;
+}
+
+/* When sidebar is collapsed */
+.sidebar-container:has(.sidebar[style*="width: 50px"]) + main {
+    margin-left: 50px;
+}

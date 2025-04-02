@@ -63,6 +63,22 @@ return [
             ]) : [],
         ],
 
+  // MongoDB Connection
+  'mongodb' => [
+    'driver' => 'mongodb',
+    'dsn' => env('MONGODB_DSN', 'mongodb://localhost:27017'),
+    'database' => env('MONGODB_DATABASE', 'planzo'),
+    'username' => env('MONGODB_USERNAME', ''),
+    'password' => env('MONGODB_PASSWORD', ''),
+    'options' => [
+        'database' => env('MONGODB_DATABASE', 'planzo'),
+        // Add SSL certificates if needed
+        //'ssl' => true,
+    ],
+],
+
+
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
